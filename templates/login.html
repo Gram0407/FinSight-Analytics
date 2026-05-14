@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinSight Analytics — Login</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050810;--surface:#0c1020;--surface2:#111827;--border:rgba(99,179,237,0.12);--border2:rgba(99,179,237,0.25);--accent:#38bdf8;--accent2:#818cf8;--green:#34d399;--red:#f87171;--yellow:#fbbf24;--orange:#fb923c;--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.bg-grid{position:fixed;inset:0;background-image:linear-gradient(rgba(56,189,248,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none}
+.glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(140px);pointer-events:none}
+.glow-1{top:-200px;right:-200px;background:rgba(56,189,248,0.06)}
+.glow-2{bottom:-200px;left:-200px;background:rgba(129,140,248,0.06)}
+.card{background:var(--surface);border:1px solid var(--border2);border-radius:20px;padding:40px;width:100%;max-width:420px;position:relative;z-index:1;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
+.logo{display:flex;align-items:center;gap:12px;margin-bottom:28px;justify-content:center}
+.logo-icon{width:44px;height:44px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#fff}
+.logo-text{font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:var(--text)}
+.logo-sub{font-size:10px;color:var(--muted)}
+h2{font-size:22px;font-weight:700;margin-bottom:4px;text-align:center}
+.subtitle{font-size:13px;color:var(--muted);text-align:center;margin-bottom:28px}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--accent)}
+.btn{width:100%;padding:13px;border-radius:10px;font-size:14px;font-weight:700;border:none;cursor:pointer;transition:opacity 0.2s,transform 0.1s;margin-top:6px}
+.btn-login{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-login:hover{opacity:0.9;transform:translateY(-1px)}
+.btn-admin{background:linear-gradient(135deg,var(--orange),var(--yellow));color:#fff;margin-top:8px}
+.btn-admin:hover{opacity:0.9}
+.link-row{text-align:center;margin-top:18px;font-size:13px;color:var(--muted)}
+.link-row a{color:var(--accent);text-decoration:none;font-weight:600}
+.msg{padding:12px 16px;border-radius:10px;font-size:13px;margin-bottom:14px;display:none;line-height:1.5}
+.msg.error{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.25);color:var(--red)}
+.msg.success{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.25);color:var(--green)}
+.msg.warning{background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.25);color:var(--yellow)}
+.msg.blocked{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.25);color:var(--red)}
+.divider{display:flex;align-items:center;gap:10px;margin:16px 0;color:var(--muted);font-size:11px}
+.divider::before,.divider::after{content:'';flex:1;border-top:1px solid var(--border)}
+.info-box{margin-top:18px;padding:12px 14px;background:rgba(251,146,60,0.07);border:1px solid rgba(251,146,60,0.2);border-radius:10px;font-size:11px;color:var(--muted2)}
+.info-box strong{color:var(--orange)}
+.status-icon{font-size:28px;text-align:center;display:block;margin-bottom:8px}
+</style>
+</head>
+<body>
+<div class="bg-grid"></div>
+<div class="glow glow-1"></div>
+<div class="glow glow-2"></div>
+
+<div class="card">
+  <div class="logo">
+    <div class="logo-icon">FS</div>
+    <div>
+      <div class="logo-text">FinSight Analytics</div>
+      <div class="logo-sub">MBA Banking Technology · Pondicherry University</div>
+    </div>
+  </div>
+  <h2>Welcome Back</h2>
+  <div class="subtitle">Sign in to access your analytics dashboard</div>
+
+  <div class="msg" id="msg"></div>
+
+  <!-- Pending approval notice (shown after registration) -->
+  <div class="msg warning" id="pendingBox" style="display:none">
+    <span class="status-icon">⏳</span>
+    <strong>Account Pending Approval</strong><br>
+    Your registration is complete. An administrator must approve your account before you can log in. Please check back later.
+  </div>
+
+  <!-- Blocked notice -->
+  <div class="msg blocked" id="blockedBox" style="display:none">
+    <span class="status-icon">🚫</span>
+    <strong>Account Blocked</strong><br>
+    Your account has been blocked by an administrator. Please contact the administrator for assistance.
+  </div>
+
+  <div id="loginForm">
+    <div class="form-group">
+      <label class="form-label">Email Address</label>
+      <input class="form-input" type="email" id="email" placeholder="you@example.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Password</label>
+      <input class="form-input" type="password" id="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="btn btn-login" onclick="doLogin()" id="loginBtn">Sign In →</button>
+
+    <div class="divider">or</div>
+    <button class="btn btn-admin" onclick="fillAdmin()" title="Fill admin credentials">
+      👑 Fill Admin Credentials
+    </button>
+  </div>
+
+  <div class="link-row">Don't have an account? <a href="/register">Register here</a></div>
+
+  <div class="info-box">
+    New user accounts require <strong>admin approval</strong> before you can log in.<br>
+    Contact your administrator if you are unable to access your account.
+  </div>
+</div>
+
+<script>
+function doLogin() {
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn = document.getElementById('loginBtn');
+  hideAllMsg();
+  if(!email || !password) { showMsg('Please fill in all fields.','error'); return; }
+  btn.textContent = 'Signing in...'; btn.disabled = true;
+  const fd = new FormData();
+  fd.append('email', email); fd.append('password', password);
+  fetch('/login', {method:'POST', body:fd})
+    .then(r => r.json())
+    .then(data => {
+      if(data.success) {
+        showMsg('✅ Login successful! Redirecting...','success');
+        setTimeout(() => window.location = data.redirect, 600);
+      } else if(data.pending) {
+        document.getElementById('pendingBox').style.display = 'block';
+        document.getElementById('loginForm').style.display = 'none';
+      } else if(data.blocked) {
+        document.getElementById('blockedBox').style.display = 'block';
+        document.getElementById('loginForm').style.display = 'none';
+      } else {
+        showMsg(data.message || 'Login failed. Please try again.','error');
+        btn.textContent = 'Sign In →'; btn.disabled = false;
+      }
+    })
+    .catch(() => {
+      showMsg('Network error. Please try again.','error');
+      btn.textContent = 'Sign In →'; btn.disabled = false;
+    });
+}
+
+function fillAdmin() {
+  // Only fill the fields — user must click Sign In themselves
+  document.getElementById('email').value = 'admin@finsight.com';
+  document.getElementById('password').value = '';
+  document.getElementById('password').focus();
+  showMsg('Admin email filled. Enter your admin password and click Sign In.', 'warning');
+}
+
+function showMsg(text, type) {
+  const el = document.getElementById('msg');
+  el.textContent = text; el.className = 'msg ' + type; el.style.display = 'block';
+}
+function hideAllMsg() {
+  ['msg','pendingBox','blockedBox'].forEach(id => document.getElementById(id).style.display = 'none');
+  document.getElementById('loginForm').style.display = 'block';
+}
+
+// Check if redirected here after registration
+const params = new URLSearchParams(window.location.search);
+if(params.get('registered') === '1') {
+  showMsg('✅ Account created! Waiting for admin approval before you can log in.','warning');
+}
+</script>
+</body>
+</html>

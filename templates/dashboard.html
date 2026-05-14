@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinSight Analytics — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ── THEME VARIABLES ── */
+[data-theme="dark"] {
+  --bg:#050810;--surface:#0c1020;--surface2:#111827;--surface3:#1a2235;
+  --border:rgba(99,179,237,0.12);--border2:rgba(99,179,237,0.2);
+  --accent:#38bdf8;--accent2:#818cf8;--accent3:#6ee7b7;
+  --green:#34d399;--red:#f87171;--yellow:#fbbf24;--orange:#fb923c;
+  --text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8;--sidebar:260px;
+  --card-bg:#0c1020;--input-bg:#111827;--shadow:rgba(0,0,0,0.4);
+}
+[data-theme="light"] {
+  --bg:#f0f4f8;--surface:#ffffff;--surface2:#f8fafc;--surface3:#edf2f7;
+  --border:rgba(59,130,246,0.15);--border2:rgba(59,130,246,0.3);
+  --accent:#2563eb;--accent2:#7c3aed;--accent3:#059669;
+  --green:#16a34a;--red:#dc2626;--yellow:#d97706;--orange:#ea580c;
+  --text:#1e293b;--muted:#64748b;--muted2:#475569;--sidebar:260px;
+  --card-bg:#ffffff;--input-bg:#f8fafc;--shadow:rgba(0,0,0,0.08);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);display:flex;height:100vh;overflow:hidden;transition:background 0.3s,color 0.3s}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow-y:auto;height:100vh;padding:0 0 20px;transition:background 0.3s}
+.sidebar-brand{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;text-decoration:none}
+.brand-icon{width:34px;height:34px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.brand-text{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text)}
+.brand-sub{font-size:9px;color:var(--muted)}
+.sidebar-section{padding:14px 16px 6px}
+.sidebar-section-title{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.search-box{position:relative}
+.search-box input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 10px 8px 32px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s}
+.search-box input:focus{border-color:var(--accent)}
+.search-box::before{content:'🔍';position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:11px;pointer-events:none}
+.sector-filter{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.sector-chip{padding:3px 9px;background:var(--surface2);border:1px solid var(--border);border-radius:20px;font-size:10px;color:var(--muted);cursor:pointer;transition:all 0.2s}
+.sector-chip:hover,.sector-chip.active{background:rgba(56,189,248,0.1);border-color:var(--accent);color:var(--accent)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;border-radius:8px;margin:1px 8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted2);transition:all 0.2s;border:1px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,0.04);color:var(--text)}
+.nav-item.active{background:rgba(56,189,248,0.1);color:var(--accent);border-color:var(--border2)}
+[data-theme="light"] .nav-item:hover{background:rgba(0,0,0,0.04)}
+[data-theme="light"] .nav-item.active{background:rgba(37,99,235,0.08);color:var(--accent)}
+.nav-icon{font-size:15px}
+.watchlist-item{display:flex;align-items:center;justify-content:space-between;padding:7px 12px;margin:2px 8px;border-radius:7px;cursor:pointer;transition:background 0.2s;font-size:12px}
+.watchlist-item:hover{background:rgba(255,255,255,0.04)}
+[data-theme="light"] .watchlist-item:hover{background:rgba(0,0,0,0.04)}
+.wl-sym{font-family:'Space Mono',monospace;font-weight:700;font-size:11px;color:var(--text)}
+.wl-price{font-size:11px;color:var(--muted2)}
+.wl-chg{font-size:10px}
+.up{color:var(--green)}.dn{color:var(--red)}
+.sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+.user-card{display:flex;align-items:center;gap:10px;padding:10px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)}
+.user-avatar{width:34px;height:34px;background:linear-gradient(135deg,var(--accent2),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600;color:var(--text)}
+.user-role{font-size:10px;color:var(--muted)}
+.theme-toggle{display:flex;align-items:center;justify-content:space-between;margin-top:10px;padding:8px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)}
+.theme-toggle-label{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.toggle-switch{position:relative;width:40px;height:22px;cursor:pointer}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--muted);border-radius:22px;transition:0.3s}
+.toggle-slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s}
+input:checked+.toggle-slider{background:var(--accent)}
+input:checked+.toggle-slider:before{transform:translateX(18px)}
+
+/* ── MAIN AREA ── */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-title{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text)}
+.topbar-subtitle{font-size:11px;color:var(--muted);margin-top:1px}
+.topbar-actions{display:flex;align-items:center;gap:12px}
+.topbar-badge{font-size:11px;padding:4px 10px;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);border-radius:20px;color:var(--green)}
+.tabs-wrap{display:flex;gap:4px;background:var(--surface2);padding:4px;border-radius:10px}
+.tab-btn{padding:5px 14px;border-radius:7px;font-size:12px;font-weight:500;cursor:pointer;color:var(--muted2);background:transparent;border:none;transition:all 0.2s}
+.tab-btn.active{background:var(--surface);color:var(--accent);box-shadow:0 1px 4px var(--shadow)}
+.content{flex:1;overflow-y:auto;padding:20px 24px}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* ── CARDS ── */
+.card{background:var(--card-bg);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px;transition:background 0.3s,border 0.3s}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px}
+.card-subtitle{font-size:11px;color:var(--muted);margin-top:2px}
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:16px}
+.stat-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px}
+.stat-label{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.stat-value{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--text)}
+.stat-change{font-size:11px;margin-top:3px}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:600}
+.badge-green{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.badge-red{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+.badge-blue{background:rgba(56,189,248,0.12);color:var(--accent);border:1px solid rgba(56,189,248,0.2)}
+.badge-yellow{background:rgba(251,191,36,0.12);color:var(--yellow);border:1px solid rgba(251,191,36,0.2)}
+.badge-purple{background:rgba(129,140,248,0.12);color:var(--accent2);border:1px solid rgba(129,140,248,0.2)}
+
+/* ── STOCK TABLE ── */
+.stock-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+.stock-table{width:100%;border-collapse:collapse;font-size:12px}
+.stock-table thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;white-space:nowrap}
+.stock-table tbody tr{border-top:1px solid var(--border);transition:background 0.15s;cursor:pointer}
+.stock-table tbody tr:hover{background:rgba(56,189,248,0.04)}
+[data-theme="light"] .stock-table tbody tr:hover{background:rgba(37,99,235,0.04)}
+.stock-table td{padding:10px 14px;white-space:nowrap}
+.sym-cell{display:flex;align-items:center;gap:8px}
+.sym-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.sym-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--text)}
+.sym-sector{font-size:10px;color:var(--muted)}
+.price-cell{font-family:'Space Mono',monospace;font-size:12px;font-weight:700}
+.btn{padding:5px 12px;border-radius:7px;font-size:11px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px)}
+.btn-sm{padding:4px 10px;font-size:10px}
+.btn-outline{background:transparent;border:1px solid var(--border2);color:var(--accent)}
+.btn-outline:hover{background:rgba(56,189,248,0.08)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-danger{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+
+/* ── FORMS ── */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--accent)}
+.form-select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.macro-checklist{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.macro-check{display:flex;align-items:center;gap:7px;padding:8px 10px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;transition:all 0.2s;font-size:12px}
+.macro-check input{width:14px;height:14px;accent-color:var(--accent);cursor:pointer}
+.macro-check:hover{border-color:var(--accent);background:rgba(56,189,248,0.05)}
+.macro-check.active{border-color:var(--accent);background:rgba(56,189,248,0.08)}
+
+/* ── PREDICTION RESULT ── */
+.pred-result{display:none;background:var(--surface2);border:1px solid var(--border2);border-radius:14px;padding:20px;margin-top:16px}
+.pred-result.show{display:block}
+.pred-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.pred-trend{font-family:'Space Mono',monospace;font-size:28px;font-weight:700}
+.pred-trend.up{color:var(--green)}.pred-trend.down{color:var(--red)}
+.pred-prices{display:flex;gap:20px;align-items:center}
+.pred-price-box{text-align:center;padding:10px 16px;background:var(--surface3);border-radius:10px}
+.pred-price-label{font-size:10px;color:var(--muted);margin-bottom:3px}
+.pred-price-val{font-family:'Space Mono',monospace;font-size:18px;font-weight:700}
+.arrow-box{font-size:24px}
+.impact-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.impact-item{padding:10px;background:var(--surface3);border-radius:10px;border:1px solid var(--border)}
+.impact-var{font-size:10px;color:var(--muted);margin-bottom:3px}
+.impact-val{font-size:11px;font-family:'Space Mono',monospace;font-weight:700}
+.impact-dir{font-size:10px;margin-top:2px}
+
+/* ── AI CHAT ── */
+.chat-wrap{display:flex;flex-direction:column;height:520px;border:1px solid var(--border);border-radius:14px;overflow:hidden}
+.chat-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+.chat-msg{max-width:75%;border-radius:12px;padding:10px 14px;font-size:13px;line-height:1.55}
+.chat-msg.user{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;align-self:flex-end;border-bottom-right-radius:3px}
+.chat-msg.ai{background:var(--surface2);border:1px solid var(--border);color:var(--text);align-self:flex-start;border-bottom-left-radius:3px;white-space:pre-wrap}
+.chat-msg.loading{color:var(--muted);font-style:italic}
+.chat-input-row{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;background:var(--surface)}
+.chat-input{flex:1;background:var(--input-bg);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none}
+.chat-input:focus{border-color:var(--accent)}
+.quick-queries{display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px;background:var(--surface2);border-top:1px solid var(--border)}
+.quick-q{padding:4px 10px;background:var(--surface3);border:1px solid var(--border);border-radius:20px;font-size:11px;color:var(--muted2);cursor:pointer;transition:all 0.2s}
+.quick-q:hover{border-color:var(--accent);color:var(--accent)}
+
+/* ── REGRESSION RESULTS ── */
+.reg-results{display:none}.reg-results.show{display:block}
+.coeff-table{width:100%;border-collapse:collapse;font-size:12px;margin-top:10px}
+.coeff-table th{background:var(--surface2);padding:8px 12px;text-align:left;font-size:10px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.coeff-table td{padding:8px 12px;border-top:1px solid var(--border)}
+.coeff-table tr:hover td{background:rgba(56,189,248,0.03)}
+.sig{color:var(--green);font-weight:700}.not-sig{color:var(--muted)}
+.hausman-box{padding:14px;border-radius:10px;margin-top:12px}
+.hausman-box.fe{background:rgba(56,189,248,0.07);border:1px solid rgba(56,189,248,0.2)}
+.hausman-box.re{background:rgba(110,231,183,0.07);border:1px solid rgba(110,231,183,0.2)}
+.model-eq{font-family:'Space Mono',monospace;font-size:11px;background:var(--surface2);padding:10px 14px;border-radius:8px;color:var(--accent);border:1px solid var(--border);margin-top:10px;overflow-x:auto}
+
+/* ── HISTORY TABLE ── */
+.hist-table-wrap{overflow-x:auto;border-radius:12px;border:1px solid var(--border)}
+.hist-table{width:100%;border-collapse:collapse;font-size:12px}
+.hist-table th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.hist-table td{padding:10px 14px;border-top:1px solid var(--border);vertical-align:middle}
+.hist-table tr:hover td{background:rgba(56,189,248,0.03)}
+.trend-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:700}
+.trend-up{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.trend-down{background:rgba(248,113,113,0.12);color:var(--red);border:1px solid rgba(248,113,113,0.2)}
+
+/* ── MACRO CHARTS ── */
+.chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.chart-box{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column}
+.chart-label{font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;flex-shrink:0}
+.chart-canvas-wrap{position:relative;height:200px;width:100%;flex:1}
+
+/* ── DIAGNOSTIC ── */
+.diag-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.diag-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.diag-title{font-size:11px;font-weight:700;color:var(--muted2);margin-bottom:8px}
+.diag-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700}
+.diag-note{font-size:11px;color:var(--muted);margin-top:4px}
+.good{color:var(--green)}.bad{color:var(--red)}.warn{color:var(--yellow)}
+
+/* ── MISC ── */
+.empty-state{text-align:center;padding:40px;color:var(--muted)}
+.empty-icon{font-size:40px;margin-bottom:10px}
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;right:20px;padding:12px 20px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;font-size:13px;color:var(--text);z-index:9999;box-shadow:0 4px 20px var(--shadow);transform:translateX(120%);transition:transform 0.3s}
+.toast.show{transform:translateX(0)}
+.info-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:12px}
+.info-key{color:var(--muted);width:140px;flex-shrink:0}
+.info-val{color:var(--text);font-family:'Space Mono',monospace;font-size:11px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <a class="sidebar-brand" href="#">
+    <div class="brand-icon">FS</div>
+    <div>
+      <div class="brand-text">FinSight</div>
+      <div class="brand-sub">Analytics Platform</div>
+    </div>
+  </a>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Search</div>
+    <div class="search-box">
+      <input type="text" id="stockSearch" placeholder="Search stocks...">
+    </div>
+    <div class="sector-filter" id="sectorFilter">
+      <div class="sector-chip active" data-sector="all">All</div>
+      <div class="sector-chip" data-sector="Technology">Tech</div>
+      <div class="sector-chip" data-sector="Banking">Banking</div>
+      <div class="sector-chip" data-sector="Banks">Banks</div>
+      <div class="sector-chip" data-sector="Pharma">Pharma</div>
+      <div class="sector-chip" data-sector="Healthcare">Health</div>
+      <div class="sector-chip" data-sector="Energy">Energy</div>
+      <div class="sector-chip" data-sector="Auto">Auto</div>
+      <div class="sector-chip" data-sector="Finance">Finance</div>
+      <div class="sector-chip" data-sector="FMCG">FMCG</div>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Navigation</div>
+    <div class="nav-item active" onclick="switchTab('live')" id="nav-live" {% if settings.get('show_live_stocks','1')!='1' %}style="display:none"{% endif %}>
+      <span class="nav-icon">📈</span><span>Live Stocks</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('macro')" id="nav-macro" {% if settings.get('show_macro','1')!='1' %}style="display:none"{% endif %}>
+      <span class="nav-icon">🌐</span><span>Macro Indicators</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('regression')" id="nav-regression" {% if settings.get('show_regression','1')!='1' %}style="display:none"{% endif %}>
+      <span class="nav-icon">📐</span><span>Regression Analysis</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('prediction')" id="nav-prediction" {% if settings.get('show_prediction','1')!='1' %}style="display:none"{% endif %}>
+      <span class="nav-icon">🔮</span><span>Manual Prediction</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('history')" id="nav-history" {% if settings.get('show_history','1')!='1' %}style="display:none"{% endif %}>
+      <span class="nav-icon">📋</span><span>History</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('ai')" id="nav-ai" {% if settings.get('show_ai','1')!='1' %}style="display:none"{% endif %}>
+      <span class="nav-icon">🤖</span><span>AI Assistant</span>
+    </div>
+  </div>
+
+  <div class="sidebar-section">
+    <div class="sidebar-section-title">Watchlist</div>
+    <div id="watchlistSidebar">
+      {% if watchlist %}
+        {% for sym in watchlist %}
+        <div class="watchlist-item" onclick="openStockDetail('{{sym}}')">
+          <div><div class="wl-sym">{{sym}}</div><div class="wl-price" id="wl-p-{{sym}}">—</div></div>
+          <div class="wl-chg" id="wl-c-{{sym}}">—</div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div style="padding:8px 12px;font-size:11px;color:var(--muted)">No stocks in watchlist</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">{{ username[0].upper() }}</div>
+      <div>
+        <div class="user-name">{{ username }}</div>
+        <div class="user-role">MBA Banking Technology</div>
+      </div>
+    </div>
+    <div class="theme-toggle" style="margin-top:10px">
+      <span class="theme-toggle-label">☀️ Light Mode</span>
+      <label class="toggle-switch">
+        <input type="checkbox" id="themeToggle" {% if theme == 'dark' %}checked{% endif %}>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <a href="/profile" style="display:block;margin-top:8px">
+      <button class="btn btn-outline btn-sm" style="width:100%">⚙️ Profile Settings</button>
+    </a>
+    <a href="/logout" style="display:block;margin-top:6px">
+      <button class="btn btn-ghost btn-sm" style="width:100%">🚪 Logout</button>
+    </a>
+  </div>
+</nav>
+
+<!-- MAIN AREA -->
+<div class="main">
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">📈 Live Stock Dashboard</div>
+      <div class="topbar-subtitle">NSE/BSE • Panel Data Regression • Macroeconomic Analysis</div>
+    </div>
+    <div class="topbar-actions">
+      {% set ms = settings.get('market_status','open') %}
+      <div class="topbar-badge" style="{% if ms=='open' %}background:rgba(52,211,153,0.1);border-color:rgba(52,211,153,0.2);color:var(--green){% elif ms=='closed' %}background:rgba(248,113,113,0.1);border-color:rgba(248,113,113,0.2);color:var(--red){% else %}background:rgba(251,191,36,0.1);border-color:rgba(251,191,36,0.2);color:var(--yellow){% endif %}">
+        {{ '🟢 Market Open' if ms=='open' else ('🔴 Market Closed' if ms=='closed' else '🟡 Market Holiday') }}
+      </div>
+      {% if settings.get('site_notice','') %}
+      <div style="font-size:11px;padding:4px 10px;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.2);border-radius:20px;color:#fb923c;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ settings.get('site_notice','') }}">
+        📢 {{ settings.get('site_notice','') }}
+      </div>
+      {% endif %}
+      {% if is_admin %}
+      <a href="/admin" target="_blank"><div style="font-size:11px;padding:4px 10px;background:rgba(251,146,60,0.1);border:1px solid rgba(251,146,60,0.3);border-radius:20px;color:#fb923c;cursor:pointer;text-decoration:none">👑 Admin Panel ↗</div></a>
+      {% endif %}
+      <div class="tabs-wrap">
+        <button class="tab-btn active" onclick="switchTab('live')" id="tabBtn-live" {% if settings.get('show_live_stocks','1')!='1' %}style="display:none"{% endif %}>Live</button>
+        <button class="tab-btn" onclick="switchTab('macro')" id="tabBtn-macro" {% if settings.get('show_macro','1')!='1' %}style="display:none"{% endif %}>Macro</button>
+        <button class="tab-btn" onclick="switchTab('regression')" id="tabBtn-regression" {% if settings.get('show_regression','1')!='1' %}style="display:none"{% endif %}>Regression</button>
+        <button class="tab-btn" onclick="switchTab('prediction')" id="tabBtn-prediction" {% if settings.get('show_prediction','1')!='1' %}style="display:none"{% endif %}>Predict</button>
+        <button class="tab-btn" onclick="switchTab('history')" id="tabBtn-history" {% if settings.get('show_history','1')!='1' %}style="display:none"{% endif %}>History</button>
+        <button class="tab-btn" onclick="switchTab('ai')" id="tabBtn-ai" {% if settings.get('show_ai','1')!='1' %}style="display:none"{% endif %}>AI</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CONTENT AREA -->
+  <div class="content">
+
+    <!-- ── TAB: LIVE STOCKS ── -->
+    <div class="tab-panel active" id="panel-live" {% if settings.get('show_live_stocks','1')!='1' %}style="display:none!important"{% endif %}>
+      <div class="stat-grid">
+        <div class="stat-card">
+          <div class="stat-label">Total Stocks</div>
+          <div class="stat-value" id="totalStocks">—</div>
+          <div class="stat-change"><span class="badge badge-blue">NSE + BSE</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Gainers</div>
+          <div class="stat-value up" id="totalGainers">—</div>
+          <div class="stat-change"><span class="badge badge-green">↑ Positive</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Losers</div>
+          <div class="stat-value dn" id="totalLosers">—</div>
+          <div class="stat-change"><span class="badge badge-red">↓ Negative</span></div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Avg Change</div>
+          <div class="stat-value" id="avgChange">—</div>
+          <div class="stat-change"><span class="badge badge-yellow">Daily Avg</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:0">
+        <div class="stock-table-wrap">
+          <table class="stock-table">
+            <thead>
+              <tr>
+                <th>Stock / F&O</th>
+                <th>Live Price</th>
+                <th>Change</th>
+                <th>Change %</th>
+                <th>Today High</th>
+                <th>Today Low</th>
+                <th>52W High</th>
+                <th>52W Low</th>
+                <th>Sector</th>
+                <th>Market Cap</th>
+                <th>Investment Term</th>
+                <th>Prev Close</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="stockTableBody">
+              <tr><td colspan="13" style="text-align:center;padding:30px;color:var(--muted)">
+                <span class="spinner"></span> Loading stocks...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: MACRO INDICATORS ── -->
+    <div class="tab-panel" id="panel-macro" {% if settings.get('show_macro','1')!='1' %}style="display:none!important"{% endif %}>
+      {% if settings.get('show_macro','1')!='1' %}
+      <div style="text-align:center;padding:60px;color:var(--muted)"><div style="font-size:48px;margin-bottom:14px">🔒</div><div style="font-size:16px;font-weight:600">Access Restricted</div><div style="font-size:13px;margin-top:6px">This section has been disabled by the administrator.</div></div>
+      {% else %}
+      {% if last_updated %}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;padding:10px 16px;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.15);border-radius:10px;font-size:12px;flex-wrap:wrap">
+        <span style="color:var(--accent)">🔄</span>
+        <span style="color:var(--muted2)">Macro data last updated by Admin:</span>
+        <span style="font-family:'Space Mono',monospace;color:var(--accent);font-weight:700">{{ last_updated }}</span>
+        <span style="color:var(--muted);margin-left:4px">· Year {{ latest_year }}</span>
+        {% if is_admin %}<a href="/admin" style="margin-left:auto;font-size:11px;color:var(--accent);text-decoration:none;padding:2px 8px;border:1px solid rgba(56,189,248,0.3);border-radius:6px">✏️ Update Data</a>{% endif %}
+      </div>
+      {% endif %}
+      <div class="stat-grid" style="grid-template-columns:repeat(3,1fr)">
+        {% if settings.get('show_gdp','1')=='1' %}
+        <div class="stat-card">
+          <div class="stat-label">GDP Growth {{ latest_year }}</div>
+          <div class="stat-value {{ 'up' if latest_macro.get('GDP_Growth',0)|float > 0 else 'dn' }}">{{ latest_macro.get('GDP_Growth', '—') }}%</div>
+          <div class="stat-change {{ 'up' if latest_macro.get('GDP_Growth',0)|float > 5 else '' }}">{{ '↑ Expanding' if latest_macro.get('GDP_Growth',0)|float > 5 else '→ Moderate' }}</div>
+        </div>{% endif %}
+        {% if settings.get('show_inflation','1')=='1' %}
+        <div class="stat-card">
+          <div class="stat-label">Inflation (CPI) {{ latest_year }}</div>
+          <div class="stat-value warn">{{ latest_macro.get('Inflation', '—') }}%</div>
+          <div class="stat-change"><span class="badge {{ 'badge-green' if latest_macro.get('Inflation',9)|float <= 6 else 'badge-red' }}">{{ 'Within Target' if latest_macro.get('Inflation',9)|float <= 6 else 'Above Target' }}</span></div>
+        </div>{% endif %}
+        {% if settings.get('show_interest','1')=='1' %}
+        <div class="stat-card">
+          <div class="stat-label">Repo Rate {{ latest_year }}</div>
+          <div class="stat-value">{{ latest_macro.get('Interest_Rate', '—') }}%</div>
+          <div class="stat-change"><span class="badge badge-blue">RBI Policy Rate</span></div>
+        </div>{% endif %}
+        {% if settings.get('show_exchange','1')=='1' %}
+        <div class="stat-card">
+          <div class="stat-label">Exchange Rate {{ latest_year }}</div>
+          <div class="stat-value">₹{{ latest_macro.get('Exchange_Rate', '—') }}</div>
+          <div class="stat-change dn">INR/USD</div>
+        </div>{% endif %}
+        {% if settings.get('show_m3','1')=='1' %}
+        <div class="stat-card">
+          <div class="stat-label">M3 Growth {{ latest_year }}</div>
+          <div class="stat-value up">{{ latest_macro.get('M3_Growth', '—') }}%</div>
+          <div class="stat-change up">↑ Money Supply</div>
+        </div>{% endif %}
+        {% if settings.get('show_iip','1')=='1' %}
+        <div class="stat-card">
+          <div class="stat-label">IIP {{ latest_year }}</div>
+          <div class="stat-value">{{ latest_macro.get('IIP', '—') }}%</div>
+          <div class="stat-change"><span class="badge badge-green">Industrial Output</span></div>
+        </div>{% endif %}
+      </div>
+
+      <div class="chart-grid">
+        <div class="chart-box">
+          <div class="chart-label">📊 GDP Growth vs Inflation (%)</div>
+          <div class="chart-canvas-wrap"><canvas id="macroChart1"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">🏦 Interest Rate &amp; M3 Growth (%)</div>
+          <div class="chart-canvas-wrap"><canvas id="macroChart2"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">💱 Exchange Rate (INR/USD)</div>
+          <div class="chart-canvas-wrap"><canvas id="macroChart3"></canvas></div>
+        </div>
+        <div class="chart-box">
+          <div class="chart-label">🏭 IIP – Industrial Production Index (%)</div>
+          <div class="chart-canvas-wrap"><canvas id="macroChart4"></canvas></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">Panel Model Expected Impacts</div></div>
+        <div class="model-eq">Y_it = α + β₁·GDP + β₂·Inflation + β₃·Interest + β₄·Exchange + β₅·M3 + β₆·IIP + μᵢ + εᵢₜ</div>
+        <table class="coeff-table" style="margin-top:14px">
+          <thead><tr><th>Variable</th><th>Expected Sign</th><th>Economic Logic</th><th>Magnitude</th></tr></thead>
+          <tbody>
+            <tr><td><strong>GDP Growth</strong></td><td><span class="badge badge-green">β > 0</span></td><td>Higher growth → better earnings → higher prices</td><td>High</td></tr>
+            <tr><td><strong>Inflation</strong></td><td><span class="badge badge-red">β < 0</span></td><td>Rising prices → reduced real returns → lower prices</td><td>Moderate</td></tr>
+            <tr><td><strong>Interest Rate</strong></td><td><span class="badge badge-red">β < 0</span></td><td>Higher cost of capital → lower valuations</td><td>High</td></tr>
+            <tr><td><strong>Exchange Rate</strong></td><td><span class="badge badge-yellow">β ≷ 0</span></td><td>Mixed: exports benefit, imports costlier</td><td>Sector-specific</td></tr>
+            <tr><td><strong>M3 (Money Supply)</strong></td><td><span class="badge badge-green">β > 0</span></td><td>Excess liquidity → investment in equities</td><td>Moderate</td></tr>
+            <tr><td><strong>IIP</strong></td><td><span class="badge badge-green">β > 0</span></td><td>Higher industrial output → better corporate profits</td><td>Moderate</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+      {% endif %}<!-- /show_macro else -->
+
+    <!-- ── TAB: REGRESSION ANALYSIS ── -->
+    <div class="tab-panel" id="panel-regression" {% if settings.get('show_regression','1')!='1' %}style="display:none!important"{% endif %}>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">Panel Data Regression</div><div class="card-subtitle">Fixed Effects · Random Effects · Hausman Test</div></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Analysis Mode</label>
+            <select class="form-input form-select" id="regMode" onchange="toggleRegMode()">
+              <option value="panel">Multi-Stock (Panel Data)</option>
+              <option value="single">Single-Stock (OLS)</option>
+            </select>
+          </div>
+          <div class="form-group" id="regSingleGroup" style="display:none">
+            <label class="form-label">Select Stock</label>
+            <select class="form-input form-select" id="regSingleSymbol">
+              {% for s in stocks %}<option value="{{ s.symbol }}">{{ s.symbol }} — {{ s.sector }}</option>{% endfor %}
+            </select>
+          </div>
+        </div>
+        <div id="regPanelGroup">
+          <div class="form-group">
+            <label class="form-label">Select Stocks for Panel (min 2, hold Ctrl)</label>
+            <select class="form-input" id="regPanelSymbols" multiple size="6">
+              {% for s in stocks %}<option value="{{ s.symbol }}">{{ s.symbol }} ({{ s.sector }})</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Effect Type</label>
+            <select class="form-input form-select" id="regEffect">
+              <option value="both">Both (+ Hausman Test)</option>
+              <option value="fixed">Fixed Effects Only</option>
+              <option value="random">Random Effects Only</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="runRegression()">▶ Run Regression Analysis</button>
+        <button class="btn btn-outline" style="margin-left:8px" onclick="runDiagnostics()">🔬 Run Diagnostics</button>
+      </div>
+
+      <div class="reg-results" id="regResults">
+        <div class="card" id="feCard" style="display:none">
+          <div class="card-header">
+            <div><div class="card-title">Fixed Effects Model</div><div class="card-subtitle">Within Estimator — Controls for unobserved firm-specific factors</div></div>
+            <span class="badge badge-blue" id="feR2">R²: —</span>
+          </div>
+          <table class="coeff-table">
+            <thead><tr><th>Variable</th><th>Coefficient (β)</th><th>Std Error</th><th>t-Stat</th><th>p-Value</th><th>Significance</th></tr></thead>
+            <tbody id="feTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="reCard" style="display:none">
+          <div class="card-header">
+            <div><div class="card-title">Random Effects Model</div><div class="card-subtitle">GLS Estimator — Assumes entity effects are uncorrelated with regressors</div></div>
+            <span class="badge badge-purple" id="reR2">R²: —</span>
+          </div>
+          <table class="coeff-table">
+            <thead><tr><th>Variable</th><th>Coefficient (β)</th><th>Std Error</th><th>t-Stat</th><th>p-Value</th><th>Significance</th></tr></thead>
+            <tbody id="reTableBody"></tbody>
+          </table>
+        </div>
+
+        <div class="card" id="hausmanCard" style="display:none">
+          <div class="card-header"><div class="card-title">Hausman Specification Test</div></div>
+          <div class="hausman-box" id="hausmanBox">
+            <div id="hausmanDecision"></div>
+          </div>
+        </div>
+
+        <div class="card" id="olsCard" style="display:none">
+          <div class="card-header">
+            <div><div class="card-title">OLS Regression</div><div id="olsSubtitle" class="card-subtitle"></div></div>
+            <span class="badge badge-blue" id="olsR2">R²: —</span>
+          </div>
+          <table class="coeff-table">
+            <thead><tr><th>Variable</th><th>Coefficient (β)</th><th>Std Error</th><th>t-Stat</th><th>p-Value</th><th>Significance</th></tr></thead>
+            <tbody id="olsTableBody"></tbody>
+          </table>
+          <div style="margin-top:12px;display:flex;gap:10px" id="olsStats"></div>
+        </div>
+
+        <div class="diag-grid" id="diagGrid" style="display:none">
+          <div class="diag-card"><div class="diag-title">ADF Test (Stationarity)</div><div class="diag-val" id="diagADF">—</div><div class="diag-note" id="diagADFNote"></div></div>
+          <div class="diag-card"><div class="diag-title">Durbin-Watson (Autocorrelation)</div><div class="diag-val" id="diagDW">—</div><div class="diag-note" id="diagDWNote"></div></div>
+          <div class="diag-card"><div class="diag-title">Breusch-Pagan (Heteroskedasticity)</div><div class="diag-val" id="diagBP">—</div><div class="diag-note" id="diagBPNote"></div></div>
+          <div class="diag-card"><div class="diag-title">VIF (Multicollinearity)</div><div class="diag-val" id="diagVIF">—</div><div class="diag-note" id="diagVIFNote"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: MANUAL PREDICTION ── -->
+    <div class="tab-panel" id="panel-prediction" {% if settings.get('show_prediction','1')!='1' %}style="display:none!important"{% endif %}>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">🔮 Manual Stock Prediction</div>
+          <div class="card-subtitle">Uses trained Fixed Effects Panel Regression — Y_it = α + β₁GDP + β₂Inflation + β₃Interest + β₄Exchange + β₅M3 + β₆IIP + μᵢ + εᵢₜ</div></div>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Exchange</label>
+            <select class="form-input form-select" id="predExchange">
+              <option>NSE</option><option>BSE</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Stock (Entity i)</label>
+            <select class="form-input form-select" id="predSymbol">
+              {% for s in stocks %}<option value="{{ s.symbol }}">{{ s.symbol }} — {{ s.sector }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Year / Time Period (t)</label>
+            <select class="form-input form-select" id="predYear" onchange="onYearChange()">
+              {% for y in macro_years | sort(reverse=True) %}
+              <option value="{{ y }}" {% if y == latest_year %}selected{% endif %}>{{ y }}{% if y == latest_year %} ← Latest DB Data{% endif %}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Current / Input Stock Price (₹)</label>
+            <input class="form-input" type="number" id="predPrice" placeholder="e.g. 2500" step="0.01">
+          </div>
+        </div>
+
+        <!-- Live DB Macro Preview Banner -->
+        <div id="macroPrevBanner" style="margin-bottom:14px;padding:12px 16px;background:rgba(110,231,183,0.06);border:1px solid rgba(110,231,183,0.18);border-radius:10px">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+            <div style="font-size:11px;font-weight:700;color:var(--accent3)">📡 DB Macro Values for Selected Year <span id="prevYearLabel" style="font-family:'Space Mono',monospace"></span></div>
+            {% if last_updated %}<div style="font-size:10px;color:var(--muted)">Admin updated: {{ last_updated }}</div>{% endif %}
+          </div>
+          <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px" id="macroPrevGrid"></div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Macroeconomic Variable Selection</label>
+          <div style="display:flex;gap:8px;margin-bottom:10px">
+            <button class="btn btn-sm btn-outline" onclick="selectAllMacro()">Use All Indicators</button>
+            <button class="btn btn-sm btn-ghost" onclick="clearMacro()">Clear All</button>
+          </div>
+          <div class="macro-checklist" id="macroChecklist">
+            <label class="macro-check active"><input type="checkbox" value="GDP_Growth" checked> 📊 GDP Growth</label>
+            <label class="macro-check active"><input type="checkbox" value="Inflation" checked> 💹 Inflation (CPI)</label>
+            <label class="macro-check active"><input type="checkbox" value="Interest_Rate" checked> 🏦 Interest Rate (Repo)</label>
+            <label class="macro-check active"><input type="checkbox" value="Exchange_Rate" checked> 💱 Exchange Rate (₹/USD)</label>
+            <label class="macro-check active"><input type="checkbox" value="M3_Growth" checked> 💰 Money Supply (M3)</label>
+            <label class="macro-check active"><input type="checkbox" value="IIP" checked> 🏭 IIP</label>
+          </div>
+        </div>
+
+        <div id="customMacroInputs" style="display:none;margin-top:12px">
+          <div class="form-group"><label class="form-label">Custom Macro Values (optional — leave blank to use year defaults)</label></div>
+          <div class="form-grid" id="customMacroGrid"></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted2);cursor:pointer">
+            <input type="checkbox" id="useCustomMacro" onchange="toggleCustomMacro()"> Enter custom macro values
+          </label>
+        </div>
+
+        <div style="margin-top:16px;display:flex;gap:10px">
+          <button class="btn btn-primary" onclick="runManualPrediction()">🔮 Generate Prediction</button>
+          <button class="btn btn-ghost" onclick="clearPrediction()">✕ Clear</button>
+        </div>
+      </div>
+
+      <div class="pred-result" id="predResult">
+        <div class="pred-header">
+          <div>
+            <div style="font-size:11px;color:var(--muted);margin-bottom:4px">PANEL REGRESSION PREDICTION</div>
+            <div style="display:flex;align-items:center;gap:12px">
+              <div class="pred-trend" id="predTrend">—</div>
+              <div>
+                <span class="badge" id="predConfBadge">—</span>
+                <div style="font-size:11px;color:var(--muted);margin-top:4px" id="predSymbolLabel">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="pred-prices">
+            <div class="pred-price-box">
+              <div class="pred-price-label">Input Price</div>
+              <div class="pred-price-val" id="predInputPrice">—</div>
+            </div>
+            <div class="arrow-box" id="predArrow">→</div>
+            <div class="pred-price-box">
+              <div class="pred-price-label">Predicted Price</div>
+              <div class="pred-price-val" id="predOutputPrice">—</div>
+            </div>
+            <div class="pred-price-box">
+              <div class="pred-price-label">Change %</div>
+              <div class="pred-price-val" id="predChangePct">—</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">MODEL EQUATION</div>
+        <div class="model-eq" id="predModelEq">—</div>
+
+        <div style="font-size:11px;color:var(--muted);margin:14px 0 8px">MACRO IMPACT ANALYSIS (β Coefficients)</div>
+        <div class="impact-grid" id="predImpactGrid"></div>
+
+        <div style="font-size:11px;color:var(--muted);margin:14px 0 8px">ECONOMIC INTERPRETATION</div>
+        <div id="predInterpret" style="font-size:12px;line-height:1.7;color:var(--muted2)"></div>
+
+        <div style="margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:10px;color:var(--muted)">
+          ⚠️ This analysis is for educational and research purposes only (MBA Banking Technology, Pondicherry University). Not financial advice.
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: HISTORY ── -->
+    <div class="tab-panel" id="panel-history" {% if settings.get('show_history','1')!='1' %}style="display:none!important"{% endif %}>
+      <div class="card">
+        <div class="card-header">
+          <div><div class="card-title">📋 Prediction History</div><div class="card-subtitle">All manual predictions saved • Fixed Effects Panel Regression</div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm btn-outline" onclick="loadHistory()">🔄 Refresh</button>
+            <button class="btn btn-sm btn-ghost" onclick="exportHistory()">📥 Export CSV</button>
+          </div>
+        </div>
+        <div class="hist-table-wrap">
+          <table class="hist-table">
+            <thead>
+              <tr>
+                <th>#</th><th>Date</th><th>Stock</th><th>Input Price</th>
+                <th>Predicted Price</th><th>Trend</th><th>Confidence</th>
+                <th>Year Used</th><th>Model</th><th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr><td colspan="10" style="text-align:center;padding:30px;color:var(--muted)">
+                <span class="spinner"></span> Loading history...
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TAB: AI ASSISTANT ── -->
+    <div class="tab-panel" id="panel-ai" {% if settings.get('show_ai','1')!='1' %}style="display:none!important"{% endif %}>
+      <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px">
+        <div class="card" style="padding:0">
+          <div style="padding:16px 20px;border-bottom:1px solid var(--border)">
+            <div class="card-title">🤖 FinSight AI Assistant</div>
+            <div class="card-subtitle">Powered by Claude • Macroeconomic Stock Analysis</div>
+          </div>
+          <div class="chat-wrap" style="border:none;border-radius:0">
+            <div class="chat-messages" id="chatMessages">
+              <div class="chat-msg ai">👋 Welcome to **FinSight AI**! I'm your intelligent financial analytics assistant.
+
+I can help you:
+📊 Predict stock price movements using panel regression
+🌐 Explain macroeconomic impacts on sectors
+📐 Interpret Fixed/Random Effects results
+💡 Provide investment analysis (educational only)
+
+Ask me anything about Indian stocks and macroeconomics!</div>
+            </div>
+            <div class="quick-queries">
+              <div class="quick-q" onclick="sendQuickQ(this)">Predict TCS movement</div>
+              <div class="quick-q" onclick="sendQuickQ(this)">Explain GDP impact on Banking</div>
+              <div class="quick-q" onclick="sendQuickQ(this)">Fixed vs Random Effects</div>
+              <div class="quick-q" onclick="sendQuickQ(this)">Inflation impact on FMCG stocks</div>
+              <div class="quick-q" onclick="sendQuickQ(this)">Current macro outlook India</div>
+              <div class="quick-q" onclick="sendQuickQ(this)">Hausman test interpretation</div>
+            </div>
+            <div class="chat-input-row">
+              <input class="chat-input" id="chatInput" placeholder="Ask about stocks, macroeconomics, regression models..." onkeydown="if(event.key==='Enter')sendChat()">
+              <button class="btn btn-primary" onclick="sendChat()">Send ➤</button>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="card">
+            <div class="card-header"><div class="card-title">Quick Predict</div></div>
+            <div class="form-group">
+              <label class="form-label">Stock Symbol</label>
+              <select class="form-input form-select" id="aiSymbol">
+                {% for s in stocks %}<option value="{{ s.symbol }}">{{ s.symbol }}</option>{% endfor %}
+              </select>
+            </div>
+            <button class="btn btn-primary" style="width:100%" onclick="aiPredict()">🔮 AI Predict</button>
+            <div id="aiPredResult" style="margin-top:14px;display:none">
+              <div style="padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+                  <span id="aiPredSymbol" style="font-family:'Space Mono',monospace;font-weight:700;font-size:13px"></span>
+                  <span class="badge" id="aiSuggBadge"></span>
+                </div>
+                <div class="info-row"><span class="info-key">Trend</span><span class="info-val" id="aiTrend"></span></div>
+                <div class="info-row"><span class="info-key">Current Price</span><span class="info-val" id="aiCurrPrice"></span></div>
+                <div class="info-row"><span class="info-key">Predicted</span><span class="info-val" id="aiPredPrice"></span></div>
+                <div class="info-row"><span class="info-key">Expected Change</span><span class="info-val" id="aiExpChg"></span></div>
+                <div class="info-row"><span class="info-key">Confidence</span><span class="info-val" id="aiConf"></span></div>
+                <div class="info-row"><span class="info-key">Momentum</span><span class="info-val" id="aiMomentum"></span></div>
+                <div class="info-row"><span class="info-key">Model R²</span><span class="info-val" id="aiR2"></span></div>
+                <div style="margin-top:10px;font-size:10px;color:var(--muted)" id="aiReasons"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title">Macro Snapshot</div>
+              {% if last_updated %}<span style="font-size:10px;color:var(--muted)">{{ last_updated }}</span>{% endif %}
+            </div>
+            <div class="info-row"><span class="info-key">GDP Growth</span><span class="info-val up">{{ latest_macro.get('GDP_Growth','—') }}%</span></div>
+            <div class="info-row"><span class="info-key">Inflation</span><span class="info-val warn">{{ latest_macro.get('Inflation','—') }}%</span></div>
+            <div class="info-row"><span class="info-key">Repo Rate</span><span class="info-val">{{ latest_macro.get('Interest_Rate','—') }}%</span></div>
+            <div class="info-row"><span class="info-key">Exchange Rate</span><span class="info-val">₹{{ latest_macro.get('Exchange_Rate','—') }}/USD</span></div>
+            <div class="info-row"><span class="info-key">M3 Growth</span><span class="info-val">{{ latest_macro.get('M3_Growth','—') }}%</span></div>
+            <div class="info-row"><span class="info-key">IIP</span><span class="info-val">{{ latest_macro.get('IIP','—') }}%</span></div>
+            {% if last_updated %}<div style="font-size:10px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px solid var(--border)">🔄 Updated: {{ last_updated }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── STOCK DATA ──────────────────────────────────────────────────────────────────
+const STOCKS = {{ stocks | tojson }};
+// Admin-updated macro data from DB (latest per year)
+const MACRO_BY_YEAR = {{ macro_by_year_json | safe }};
+const LAST_UPDATED = {{ last_updated | tojson }};
+let filteredStocks = [...STOCKS];
+let activeTab = 'live';
+let activeSector = 'all';
+let macroCharts = {};
+
+// ── INIT ────────────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderStockTable(STOCKS);
+  updateStats(STOCKS);
+  loadWatchlistPrices();
+  renderMacroPreview();   // show DB macro values for default year
+  loadHistory();
+
+  // Theme toggle
+  const themeToggle = document.getElementById('themeToggle');
+  themeToggle.addEventListener('change', () => {
+    const theme = themeToggle.checked ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', theme);
+    fetch('/api/theme', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({theme})});
+    // Rebuild charts after theme CSS vars settle
+    if (activeTab === 'macro') {
+      setTimeout(loadMacroCharts, 350);
+    } else {
+      destroyMacroCharts(); // will be rebuilt when user opens Macro tab
+    }
+  });
+
+  // Search
+  document.getElementById('stockSearch').addEventListener('input', e => {
+    filterStocks(e.target.value, activeSector);
+  });
+
+  // Sector filter
+  document.querySelectorAll('.sector-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      document.querySelectorAll('.sector-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      activeSector = chip.dataset.sector;
+      filterStocks(document.getElementById('stockSearch').value, activeSector);
+    });
+  });
+
+  // Macro checklist interactivity
+  document.querySelectorAll('.macro-check input').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.macro-check').classList.toggle('active', cb.checked);
+    });
+  });
+});
+
+// ── TAB SWITCHING ────────────────────────────────────────────────────────────────
+const tabTitles = {
+  live: '📈 Live Stock Dashboard',
+  macro: '🌐 Macroeconomic Indicators',
+  regression: '📐 Regression Analysis',
+  prediction: '🔮 Manual Prediction',
+  history: '📋 Prediction History',
+  ai: '🤖 AI Assistant'
+};
+
+// Admin visibility settings from server
+const VISIBILITY = {
+  live:       '{{ settings.get("show_live_stocks","1") }}' === '1',
+  macro:      '{{ settings.get("show_macro","1") }}' === '1',
+  regression: '{{ settings.get("show_regression","1") }}' === '1',
+  prediction: '{{ settings.get("show_prediction","1") }}' === '1',
+  history:    '{{ settings.get("show_history","1") }}' === '1',
+  ai:         '{{ settings.get("show_ai","1") }}' === '1',
+};
+
+function switchTab(tab) {
+  // If the target tab is hidden by admin, redirect to first visible tab
+  if (!VISIBILITY[tab]) {
+    const fallback = Object.keys(VISIBILITY).find(k => VISIBILITY[k]);
+    if (fallback && fallback !== tab) { switchTab(fallback); return; }
+  }
+  activeTab = tab;
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('panel-' + tab);
+  if (panel) panel.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.getElementById('nav-' + tab);
+  if (navEl) navEl.classList.add('active');
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  const btnEl = document.getElementById('tabBtn-' + tab);
+  if (btnEl) btnEl.classList.add('active');
+  document.getElementById('topbarTitle').textContent = tabTitles[tab] || tab;
+  if (tab === 'macro') setTimeout(loadMacroCharts, 60);
+  if (tab === 'history') loadHistory();
+}
+
+// ── STOCK TABLE ──────────────────────────────────────────────────────────────────
+const SECTOR_COLORS = {
+  Technology:'#38bdf8',Banking:'#818cf8',Banks:'#818cf8',Energy:'#fbbf24',
+  FMCG:'#6ee7b7',Auto:'#fb923c',Pharma:'#f472b6',Infrastructure:'#a78bfa',
+  Finance:'#34d399',Metals:'#94a3b8',Healthcare:'#f472b6','Oil & Gas':'#fbbf24',
+  Chemicals:'#6ee7b7',Media:'#f97316',Alcohol:'#e879f9',Agri:'#84cc16',Unknown:'#64748b'
+};
+
+function renderStockTable(stocks) {
+  const tbody = document.getElementById('stockTableBody');
+  if(!stocks || !stocks.length) {
+    tbody.innerHTML = '<tr><td colspan="13" class="empty-state"><div class="empty-icon">📭</div><div>No stocks found</div></td></tr>';
+    return;
+  }
+  tbody.innerHTML = stocks.map((s,i) => {
+    const up = s.pct >= 0;
+    const color = SECTOR_COLORS[s.sector] || '#64748b';
+    const chgCls = up ? 'up' : 'dn';
+    const chgSign = up ? '+' : '';
+    return `<tr onclick="openStockDetail('${s.symbol}')">
+      <td><div class="sym-cell">
+        <div class="sym-dot" style="background:${color}"></div>
+        <div><div class="sym-name">${s.symbol}</div><div class="sym-sector">${s.sector}</div></div>
+        ${s.fno ? '<span class="badge badge-blue" style="font-size:9px">F&O</span>' : ''}
+      </div></td>
+      <td class="price-cell">₹${s.price.toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+      <td class="${chgCls}">${chgSign}${s.change.toFixed(2)}</td>
+      <td><span class="badge ${up?'badge-green':'badge-red'}">${chgSign}${s.pct.toFixed(2)}%</span></td>
+      <td>₹${(s.today_high||s.price).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+      <td>₹${(s.today_low||s.price).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+      <td>₹${(s.high_52w||s.price).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+      <td>₹${(s.low_52w||s.price).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+      <td><span style="color:${color};font-size:11px;font-weight:600">${s.sector}</span></td>
+      <td><span class="badge badge-yellow">${s.mcap||'—'}</span></td>
+      <td><span style="font-size:11px;color:var(--muted2)">${s.term||'Long-term'}</span></td>
+      <td class="price-cell">₹${(s.prev_close||s.price).toLocaleString('en-IN', {minimumFractionDigits:2})}</td>
+      <td onclick="event.stopPropagation()">
+        <button class="btn btn-primary btn-sm" onclick="predictStock('${s.symbol}',${s.price})">🔮 Predict</button>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function updateStats(stocks) {
+  const gainers = stocks.filter(s => s.pct >= 0).length;
+  const losers = stocks.filter(s => s.pct < 0).length;
+  const avgChg = stocks.reduce((a,s) => a + s.pct, 0) / (stocks.length || 1);
+  document.getElementById('totalStocks').textContent = stocks.length;
+  document.getElementById('totalGainers').textContent = gainers;
+  document.getElementById('totalLosers').textContent = losers;
+  const ac = document.getElementById('avgChange');
+  ac.textContent = (avgChg >= 0 ? '+' : '') + avgChg.toFixed(2) + '%';
+  ac.className = 'stat-value ' + (avgChg >= 0 ? 'up' : 'dn');
+}
+
+function filterStocks(search='', sector='all') {
+  filteredStocks = STOCKS.filter(s => {
+    const matchSearch = !search || s.symbol.toLowerCase().includes(search.toLowerCase()) ||
+      s.sector.toLowerCase().includes(search.toLowerCase()) ||
+      (s.name||'').toLowerCase().includes(search.toLowerCase());
+    const matchSector = sector === 'all' || s.sector === sector;
+    return matchSearch && matchSector;
+  });
+  renderStockTable(filteredStocks);
+  updateStats(filteredStocks);
+}
+
+function predictStock(symbol, price) {
+  switchTab('prediction');
+  setTimeout(() => {
+    document.getElementById('predSymbol').value = symbol;
+    document.getElementById('predPrice').value = price;
+    showToast(`📈 ${symbol} loaded for prediction`);
+  }, 200);
+}
+
+function openStockDetail(symbol) {
+  switchTab('ai');
+  document.getElementById('aiSymbol').value = symbol;
+  setTimeout(aiPredict, 100);
+}
+
+function loadWatchlistPrices() {
+  {% for sym in watchlist %}
+  const s{{ loop.index }} = STOCKS.find(s => s.symbol === '{{ sym }}');
+  if(s{{ loop.index }}) {
+    document.getElementById('wl-p-{{ sym }}') && (document.getElementById('wl-p-{{ sym }}').textContent = '₹' + s{{ loop.index }}.price);
+    const wc = document.getElementById('wl-c-{{ sym }}');
+    if(wc) { wc.textContent = (s{{ loop.index }}.pct >= 0 ? '+' : '') + s{{ loop.index }}.pct.toFixed(2) + '%'; wc.className = 'wl-chg ' + (s{{ loop.index }}.pct >= 0 ? 'up' : 'dn'); }
+  }
+  {% endfor %}
+}
+
+// ── MACRO CHARTS ──────────────────────────────────────────────────────────────────
+function destroyMacroCharts() {
+  ['c1','c2','c3','c4'].forEach(k => {
+    if (macroCharts[k]) { try { macroCharts[k].destroy(); } catch(e){} macroCharts[k] = null; }
+  });
+}
+
+function loadMacroCharts() {
+  destroyMacroCharts();
+  fetch('/api/macro').then(r=>r.json()).then(data => {
+    const isDark = document.documentElement.getAttribute('data-theme') !== 'light';
+    const gridColor = isDark ? 'rgba(99,179,237,0.07)' : 'rgba(59,130,246,0.07)';
+    const textColor = isDark ? '#94a3b8' : '#64748b';
+    const borderColor = isDark ? 'rgba(99,179,237,0.15)' : 'rgba(59,130,246,0.1)';
+
+    const baseOpts = (yLabel, suggestedMin, suggestedMax) => ({
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 600 },
+      plugins: {
+        legend: {
+          position: 'bottom',
+          labels: { color: textColor, font: { size: 10 }, boxWidth: 10, padding: 8 }
+        },
+        tooltip: { mode: 'index', intersect: false }
+      },
+      scales: {
+        x: {
+          ticks: { color: textColor, font: { size: 9 }, maxRotation: 0 },
+          grid: { color: gridColor },
+          border: { color: borderColor }
+        },
+        y: {
+          ticks: { color: textColor, font: { size: 9 } },
+          grid: { color: gridColor },
+          border: { color: borderColor },
+          title: { display: true, text: yLabel, color: textColor, font: { size: 9 } },
+          suggestedMin: suggestedMin,
+          suggestedMax: suggestedMax
+        }
+      }
+    });
+
+    // Chart 1 — GDP vs Inflation
+    macroCharts.c1 = new Chart(document.getElementById('macroChart1'), {
+      type: 'line',
+      data: {
+        labels: data.years,
+        datasets: [
+          { label: 'GDP Growth %', data: data.gdp,
+            borderColor: '#38bdf8', backgroundColor: 'rgba(56,189,248,0.08)',
+            tension: 0.35, pointRadius: 4, pointHoverRadius: 6, fill: true, borderWidth: 2 },
+          { label: 'Inflation %', data: data.inflation,
+            borderColor: '#f87171', backgroundColor: 'rgba(248,113,113,0.08)',
+            tension: 0.35, pointRadius: 4, pointHoverRadius: 6, fill: true, borderWidth: 2 }
+        ]
+      },
+      options: baseOpts('%', -10, 15)
+    });
+
+    // Chart 2 — Interest Rate & M3
+    macroCharts.c2 = new Chart(document.getElementById('macroChart2'), {
+      type: 'line',
+      data: {
+        labels: data.years,
+        datasets: [
+          { label: 'Interest Rate %', data: data.interest,
+            borderColor: '#818cf8', backgroundColor: 'rgba(129,140,248,0.08)',
+            tension: 0.35, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2 },
+          { label: 'M3 Growth %', data: data.m3,
+            borderColor: '#6ee7b7', backgroundColor: 'rgba(110,231,183,0.08)',
+            tension: 0.35, pointRadius: 4, pointHoverRadius: 6, fill: false, borderWidth: 2,
+            borderDash: [5, 3] }
+        ]
+      },
+      options: baseOpts('%', 0, 16)
+    });
+
+    // Chart 3 — Exchange Rate (bar)
+    macroCharts.c3 = new Chart(document.getElementById('macroChart3'), {
+      type: 'bar',
+      data: {
+        labels: data.years,
+        datasets: [
+          { label: 'INR/USD', data: data.exchange,
+            backgroundColor: 'rgba(251,191,36,0.65)',
+            borderColor: '#fbbf24', borderWidth: 1.5, borderRadius: 4 }
+        ]
+      },
+      options: baseOpts('₹/USD', 60, 90)
+    });
+
+    // Chart 4 — IIP (bar, positive/negative coloured)
+    macroCharts.c4 = new Chart(document.getElementById('macroChart4'), {
+      type: 'bar',
+      data: {
+        labels: data.years,
+        datasets: [
+          { label: 'IIP %',
+            data: data.iip,
+            backgroundColor: data.iip.map(v => v >= 0 ? 'rgba(52,211,153,0.65)' : 'rgba(248,113,113,0.65)'),
+            borderColor: data.iip.map(v => v >= 0 ? '#34d399' : '#f87171'),
+            borderWidth: 1.5, borderRadius: 4 }
+        ]
+      },
+      options: baseOpts('%', -12, 18)
+    });
+  });
+}
+
+// ── REGRESSION ────────────────────────────────────────────────────────────────────
+function toggleRegMode() {
+  const mode = document.getElementById('regMode').value;
+  document.getElementById('regPanelGroup').style.display = mode === 'panel' ? 'block' : 'none';
+  document.getElementById('regSingleGroup').style.display = mode === 'single' ? 'block' : 'none';
+}
+
+function runRegression() {
+  const mode = document.getElementById('regMode').value;
+  const results = document.getElementById('regResults');
+  results.classList.add('show');
+  ['feCard','reCard','hausmanCard','olsCard'].forEach(id => document.getElementById(id).style.display='none');
+
+  if(mode === 'panel') {
+    const opts = document.getElementById('regPanelSymbols').selectedOptions;
+    const symbols = Array.from(opts).map(o => o.value);
+    if(symbols.length < 2) { showToast('⚠️ Select at least 2 stocks'); return; }
+    const effect = document.getElementById('regEffect').value;
+    showToast('⏳ Running panel regression...');
+    fetch('/api/regression/panel', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbols,effect})})
+      .then(r=>r.json()).then(data => {
+        if(data.error){showToast('❌ '+data.error);return;}
+        if(data.fixed_effects) { renderCoeffTable('feTableBody', data.fixed_effects); document.getElementById('feR2').textContent='R²: '+data.fixed_effects.r_squared; document.getElementById('feCard').style.display='block'; }
+        if(data.random_effects) { renderCoeffTable('reTableBody', data.random_effects); document.getElementById('reR2').textContent='R²: '+data.random_effects.r_squared; document.getElementById('reCard').style.display='block'; }
+        if(data.hausman) renderHausman(data.hausman);
+        showToast('✅ Panel regression complete!');
+      });
+  } else {
+    const symbol = document.getElementById('regSingleSymbol').value;
+    showToast('⏳ Running OLS regression...');
+    fetch('/api/regression/ols', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol})})
+      .then(r=>r.json()).then(data => {
+        renderCoeffTable('olsTableBody', data);
+        document.getElementById('olsR2').textContent = 'R²: '+(data.r_squared||'N/A');
+        document.getElementById('olsSubtitle').textContent = symbol + ' • OLS Regression • n='+data.n_obs;
+        document.getElementById('olsStats').innerHTML =
+          `<span class="badge badge-blue">Adj R²: ${data.adj_r_squared}</span>
+           <span class="badge badge-green">F-stat: ${data.f_statistic}</span>
+           <span class="badge badge-yellow">AIC: ${data.aic}</span>`;
+        document.getElementById('olsCard').style.display='block';
+        showToast('✅ OLS regression complete!');
+      });
+  }
+}
+
+function runDiagnostics() {
+  const mode = document.getElementById('regMode').value;
+  let symbol = mode==='single' ? document.getElementById('regSingleSymbol').value : 'RELIANCE';
+  if(mode==='panel') {
+    const opts = document.getElementById('regPanelSymbols').selectedOptions;
+    if(opts.length) symbol = opts[0].value;
+  }
+  showToast('⏳ Running diagnostic tests...');
+  const results = document.getElementById('regResults'); results.classList.add('show');
+  fetch('/api/diagnostics', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol})})
+    .then(r=>r.json()).then(data => {
+      const diagGrid = document.getElementById('diagGrid'); diagGrid.style.display='grid';
+      // ADF
+      const adf = data.adf||{};
+      document.getElementById('diagADF').textContent = (adf.statistic||'—');
+      document.getElementById('diagADF').className = 'diag-val '+(adf.stationary?'good':'bad');
+      document.getElementById('diagADFNote').textContent = adf.interpretation||'';
+      // DW
+      const dw = data.durbin_watson||{};
+      const dwOk = dw.statistic>=1.5&&dw.statistic<=2.5;
+      document.getElementById('diagDW').textContent = dw.statistic||'—';
+      document.getElementById('diagDW').className = 'diag-val '+(dwOk?'good':'warn');
+      document.getElementById('diagDWNote').textContent = dw.interpretation||'';
+      // BP
+      const bp = data.breusch_pagan||{};
+      document.getElementById('diagBP').textContent = 'p='+bp.p_value;
+      document.getElementById('diagBP').className = 'diag-val '+(bp.homoskedastic?'good':'bad');
+      document.getElementById('diagBPNote').textContent = bp.interpretation||'';
+      // VIF
+      const vif = data.vif||{};
+      const maxVIF = Math.max(...Object.values(vif));
+      document.getElementById('diagVIF').textContent = 'max '+maxVIF;
+      document.getElementById('diagVIF').className = 'diag-val '+(maxVIF<10?'good':'bad');
+      document.getElementById('diagVIFNote').textContent = Object.entries(vif).map(([k,v])=>k+': '+v).join(' | ');
+      showToast('✅ Diagnostics complete!');
+    });
+}
+
+function renderCoeffTable(tbodyId, data) {
+  const vars = data.coefficients ? Object.keys(data.coefficients).filter(k=>k!=='Intercept') : [];
+  const tbody = document.getElementById(tbodyId);
+  tbody.innerHTML = vars.map(v => {
+    const b = data.coefficients[v]; const se = (data.std_errors||{})[v];
+    const t = (data.t_stats||{})[v]; const p = (data.p_values||{})[v];
+    const sig = p < 0.01 ? '*** <span class="sig">p<0.01</span>' : p<0.05 ? '** <span class="sig">p<0.05</span>' : p<0.1 ? '* <span class="not-sig">p<0.10</span>' : '<span class="not-sig">ns</span>';
+    return `<tr><td><strong>${v}</strong></td><td>${b}</td><td>${se}</td><td>${t}</td><td>${p}</td><td>${sig}</td></tr>`;
+  }).join('');
+}
+
+function renderHausman(h) {
+  const card = document.getElementById('hausmanCard'); card.style.display='block';
+  const box = document.getElementById('hausmanBox');
+  const isFE = h.preferred_model==='Fixed Effects';
+  box.className = 'hausman-box '+(isFE?'fe':'re');
+  document.getElementById('hausmanDecision').innerHTML = `
+    <div style="font-size:15px;font-weight:700;color:${isFE?'var(--accent)':'var(--accent3)'}">
+      ${isFE?'✅ Fixed Effects Preferred':'✅ Random Effects Preferred'}
+    </div>
+    <div style="margin-top:6px;font-size:12px;color:var(--muted2)">
+      H-statistic: <strong>${h.statistic}</strong> | p-value: <strong>${h.p_value}</strong> | df: ${h.df}
+    </div>
+    <div style="margin-top:4px;font-size:12px;color:var(--muted)">${h.reason}</div>
+  `;
+}
+
+// ── MANUAL PREDICTION ──────────────────────────────────────────────────────────────
+const MACRO_LABELS = {
+  GDP_Growth:'GDP Growth', Inflation:'Inflation',
+  Interest_Rate:'Repo Rate', Exchange_Rate:'Exchange Rate',
+  M3_Growth:'M3 Growth', IIP:'IIP'
+};
+const MACRO_UNITS = {
+  GDP_Growth:'%', Inflation:'%', Interest_Rate:'%',
+  Exchange_Rate:'₹', M3_Growth:'%', IIP:'%'
+};
+
+function onYearChange() {
+  renderMacroPreview();
+  if (document.getElementById('useCustomMacro').checked) toggleCustomMacro();
+}
+
+function renderMacroPreview() {
+  const year = document.getElementById('predYear').value;
+  const data = MACRO_BY_YEAR[year] || {};
+  document.getElementById('prevYearLabel').textContent = year;
+  const grid = document.getElementById('macroPrevGrid');
+  const vars = ['GDP_Growth','Inflation','Interest_Rate','Exchange_Rate','M3_Growth','IIP'];
+  if (!Object.keys(data).length) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:11px;grid-column:span 6">No DB data for this year. Using model defaults.</div>';
+    return;
+  }
+  grid.innerHTML = vars.map(v => {
+    const val = data[v] !== undefined ? data[v] : '—';
+    const unit = MACRO_UNITS[v] || '';
+    const prefix = v === 'Exchange_Rate' ? '₹' : '';
+    const color = v==='GDP_Growth'||v==='M3_Growth'||v==='IIP' ? 'var(--green)' :
+                  v==='Inflation'||v==='Interest_Rate' ? 'var(--red)' : 'var(--accent)';
+    return `<div style="text-align:center;padding:8px;background:var(--surface3);border-radius:8px;border:1px solid var(--border)">
+      <div style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px">${MACRO_LABELS[v]}</div>
+      <div style="font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:${color}">${prefix}${val}${unit}</div>
+    </div>`;
+  }).join('');
+}
+
+function selectAllMacro() {
+  document.querySelectorAll('.macro-check input').forEach(cb => { cb.checked = true; cb.closest('.macro-check').classList.add('active'); });
+}
+function clearMacro() {
+  document.querySelectorAll('.macro-check input').forEach(cb => { cb.checked = false; cb.closest('.macro-check').classList.remove('active'); });
+}
+
+function toggleCustomMacro() {
+  const show = document.getElementById('useCustomMacro').checked;
+  const container = document.getElementById('customMacroInputs');
+  container.style.display = show ? 'block' : 'none';
+  if (show) {
+    const selectedVars = Array.from(document.querySelectorAll('.macro-check input:checked')).map(cb => cb.value);
+    const year = document.getElementById('predYear').value;
+    const dbData = MACRO_BY_YEAR[year] || {};
+    const DEFAULTS = {GDP_Growth:8.2,Inflation:4.7,Interest_Rate:6.5,Exchange_Rate:84.0,M3_Growth:9.2,IIP:4.2};
+    document.getElementById('customMacroGrid').innerHTML = selectedVars.map(v => {
+      const dbVal = dbData[v] !== undefined ? dbData[v] : DEFAULTS[v];
+      return `<div class="form-group">
+        <label class="form-label">${MACRO_LABELS[v]} ${MACRO_UNITS[v]}</label>
+        <input class="form-input" type="number" id="custom_${v}" step="0.01" value="${dbVal}" placeholder="${dbVal}">
+      </div>`;
+    }).join('');
+  }
+}
+
+function runManualPrediction() {
+  const symbol = document.getElementById('predSymbol').value;
+  const year = document.getElementById('predYear').value;
+  const priceInput = document.getElementById('predPrice').value;
+  const stock_price = parseFloat(priceInput) || 1000;
+  const selected_vars = Array.from(document.querySelectorAll('.macro-check input:checked')).map(cb => cb.value);
+  if (!selected_vars.length) { showToast('⚠️ Select at least one macro variable'); return; }
+
+  // Use DB values for selected year (admin-updated)
+  let custom_values = null;
+  if (document.getElementById('useCustomMacro').checked) {
+    custom_values = {};
+    selected_vars.forEach(v => {
+      const el = document.getElementById('custom_' + v);
+      if (el) custom_values[v] = parseFloat(el.value) || 0;
+    });
+  }
+  // NOTE: if custom_values is null, server will auto-use DB values for the year
+
+  showToast('⏳ Running panel regression with DB macro values...');
+  fetch('/api/predict/manual', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({symbol, year:parseInt(year), stock_price, selected_vars, custom_values})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.error) { showToast('❌ '+data.error); return; }
+    renderPredResult(data);
+    showToast('✅ Prediction complete!');
+  }).catch(e => showToast('❌ Error: '+e));
+}
+
+function renderPredResult(data) {
+  const el = document.getElementById('predResult'); el.classList.add('show');
+  const isUp = data.trend === 'UP';
+  document.getElementById('predTrend').textContent = isUp ? '▲ UP' : '▼ DOWN';
+  document.getElementById('predTrend').className = 'pred-trend '+(isUp?'up':'down');
+  const confColor = {HIGH:'badge-green',MODERATE:'badge-yellow',LOW:'badge-red'}[data.confidence]||'badge-yellow';
+  document.getElementById('predConfBadge').className = 'badge '+confColor;
+  document.getElementById('predConfBadge').textContent = data.confidence+' CONFIDENCE';
+  document.getElementById('predSymbolLabel').textContent = data.symbol+' | Year: '+data.year+' | R²: '+data.r_squared;
+  document.getElementById('predInputPrice').textContent = '₹'+data.input_price.toFixed(2);
+  document.getElementById('predOutputPrice').textContent = '₹'+data.predicted_price.toFixed(2);
+  document.getElementById('predOutputPrice').className = 'pred-price-val '+(isUp?'up':'dn');
+  document.getElementById('predChangePct').textContent = (isUp?'+':'')+data.change_pct.toFixed(2)+'%';
+  document.getElementById('predChangePct').className = 'pred-price-val '+(isUp?'up':'dn');
+  document.getElementById('predArrow').textContent = isUp ? '→' : '→';
+  document.getElementById('predModelEq').textContent = data.model_equation||'';
+  const grid = document.getElementById('predImpactGrid');
+  const impact = data.impact_analysis||{};
+  grid.innerHTML = Object.entries(impact).map(([varName, info]) => {
+    const LABELS={GDP_Growth:'GDP Growth',Inflation:'Inflation',Interest_Rate:'Interest Rate',Exchange_Rate:'Exchange Rate',M3_Growth:'M3 Growth',IIP:'IIP'};
+    const dirClass = info.direction==='Positive'?'up':'dn';
+    const sig = info.significant ? '✓ Significant' : '✗ Not Sig.';
+    return `<div class="impact-item">
+      <div class="impact-var">${LABELS[varName]||varName}</div>
+      <div class="impact-val ${dirClass}">β = ${info.coefficient}</div>
+      <div class="impact-dir ${dirClass}">${info.direction} | p=${info.p_value}</div>
+      <div style="font-size:9px;color:var(--muted);margin-top:2px">${sig} | val=${info.macro_value}</div>
+    </div>`;
+  }).join('');
+  const interp = document.getElementById('predInterpret');
+  interp.innerHTML = (data.economic_interpretation||[]).map(s => `<div style="margin-bottom:4px">• ${s}</div>`).join('');
+}
+
+function clearPrediction() {
+  document.getElementById('predResult').classList.remove('show');
+  document.getElementById('predPrice').value = '';
+  showToast('Cleared');
+}
+
+// ── HISTORY ──────────────────────────────────────────────────────────────────────
+function loadHistory() {
+  const tbody = document.getElementById('historyTableBody');
+  tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)"><span class="spinner"></span> Loading...</td></tr>';
+  fetch('/api/history').then(r=>r.json()).then(data => {
+    if(!data.length) {
+      tbody.innerHTML = '<tr><td colspan="10"><div class="empty-state"><div class="empty-icon">📭</div><div>No prediction history yet. Make a prediction first!</div></div></td></tr>';
+      return;
+    }
+    tbody.innerHTML = data.map((h,i) => {
+      const isUp = h.trend==='UP';
+      const confColor = {HIGH:'badge-green',MODERATE:'badge-yellow',LOW:'badge-red'}[h.confidence]||'badge-yellow';
+      const dt = new Date(h.created_at).toLocaleString('en-IN',{dateStyle:'short',timeStyle:'short'});
+      const priceDiff = h.predicted_price - h.input_price;
+      const priceDiffSign = priceDiff>=0?'+':'';
+      return `<tr>
+        <td style="color:var(--muted);font-size:11px">${i+1}</td>
+        <td style="font-size:11px;color:var(--muted2)">${dt}</td>
+        <td><span style="font-family:'Space Mono',monospace;font-weight:700;font-size:12px">${h.symbol}</span></td>
+        <td class="price-cell">₹${h.input_price.toFixed(2)}</td>
+        <td class="price-cell ${isUp?'up':'dn'}">₹${h.predicted_price.toFixed(2)} <small>(${priceDiffSign}${priceDiff.toFixed(2)})</small></td>
+        <td><span class="trend-chip ${isUp?'trend-up':'trend-down'}">${isUp?'▲ UP':'▼ DOWN'}</span></td>
+        <td><span class="badge ${confColor}">${h.confidence}</span></td>
+        <td style="font-size:11px">${h.year_used}</td>
+        <td style="font-size:10px;color:var(--muted)">FE Panel</td>
+        <td><button class="btn btn-danger btn-sm" onclick="deleteHistory(${h.id})">🗑</button></td>
+      </tr>`;
+    }).join('');
+  }).catch(() => {
+    tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--muted)">Error loading history</td></tr>';
+  });
+}
+
+function deleteHistory(id) {
+  if(!confirm('Delete this record?')) return;
+  fetch('/api/history/delete/'+id, {method:'DELETE'}).then(() => { loadHistory(); showToast('Deleted'); });
+}
+
+function exportHistory() {
+  fetch('/api/history').then(r=>r.json()).then(data => {
+    const csv = ['Date,Stock,Input Price,Predicted Price,Trend,Confidence,Year Used,Model',
+      ...data.map(h => `${h.created_at},${h.symbol},${h.input_price},${h.predicted_price},${h.trend},${h.confidence},${h.year_used},FE Panel Regression`)
+    ].join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+    a.download = 'finsight_history.csv'; a.click();
+  });
+}
+
+// ── AI CHAT ──────────────────────────────────────────────────────────────────────
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  const query = input.value.trim();
+  if(!query) return;
+  input.value = '';
+  appendChatMsg(query, 'user');
+  const loading = appendChatMsg('⏳ Analyzing...', 'ai loading');
+  fetch('/api/ai/chat', {method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({query,context:{symbol:document.getElementById('aiSymbol').value}})})
+    .then(r=>r.json()).then(data => {
+      loading.remove();
+      appendChatMsg(data.response||'No response', 'ai');
+    }).catch(() => { loading.remove(); appendChatMsg('⚠️ AI service unavailable. Please try again.', 'ai'); });
+}
+
+function sendQuickQ(el) {
+  document.getElementById('chatInput').value = el.textContent;
+  sendChat();
+}
+
+function appendChatMsg(text, type) {
+  const msgs = document.getElementById('chatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + type;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+  return div;
+}
+
+function aiPredict() {
+  const symbol = document.getElementById('aiSymbol').value;
+  document.getElementById('aiPredResult').style.display = 'none';
+  showToast('⏳ Generating AI prediction for '+symbol+'...');
+  fetch('/api/ai/predict', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({symbol})})
+    .then(r=>r.json()).then(data => {
+      if(data.error){showToast('❌ '+data.error);return;}
+      document.getElementById('aiPredResult').style.display = 'block';
+      document.getElementById('aiPredSymbol').textContent = data.symbol + ' ('+data.sector+')';
+      const sugg = data.suggestion||'HOLD';
+      const suggColor = {BUY:'badge-green',HOLD:'badge-yellow',CAUTION:'badge-red'}[sugg]||'badge-yellow';
+      document.getElementById('aiSuggBadge').className = 'badge '+suggColor;
+      document.getElementById('aiSuggBadge').textContent = '💡 '+sugg;
+      document.getElementById('aiTrend').textContent = data.trend||'—';
+      document.getElementById('aiCurrPrice').textContent = '₹'+(data.current_price||'—');
+      document.getElementById('aiPredPrice').textContent = '₹'+(data.predicted_price||'—');
+      document.getElementById('aiExpChg').textContent = (data.expected_change_pct>=0?'+':'')+data.expected_change_pct+'%';
+      document.getElementById('aiExpChg').className = 'info-val '+(data.expected_change_pct>=0?'up':'dn');
+      document.getElementById('aiConf').textContent = data.confidence||'—';
+      document.getElementById('aiMomentum').textContent = data.momentum||'—';
+      document.getElementById('aiR2').textContent = data.r_squared||'—';
+      document.getElementById('aiReasons').innerHTML = (data.macro_reasons||[]).map(r => `<div>${r}</div>`).join('');
+      showToast('✅ AI prediction ready!');
+    }).catch(() => showToast('❌ Error getting AI prediction'));
+}
+
+// ── TOAST ──────────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast'); t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+</script>
+</body>
+</html>

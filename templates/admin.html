@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinSight Admin Panel</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#030609;--surface:#080f1a;--surface2:#0d1726;--surface3:#111f30;
+  --border:rgba(251,146,60,0.15);--border2:rgba(251,146,60,0.3);
+  --accent:#fb923c;--accent2:#f59e0b;--accent3:#ef4444;
+  --green:#34d399;--red:#f87171;--blue:#38bdf8;--purple:#a78bfa;
+  --text:#f1f5f9;--muted:#64748b;--muted2:#94a3b8;--sidebar:260px;
+  --shadow:rgba(0,0,0,0.5);
+}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);display:flex;height:100vh;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);flex-shrink:0;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;height:100vh;overflow-y:auto;padding-bottom:20px}
+.sidebar-brand{padding:18px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.brand-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:#fff;flex-shrink:0}
+.brand-text{font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:var(--text)}
+.brand-badge{display:inline-block;margin-top:2px;padding:1px 6px;background:rgba(251,146,60,0.15);border:1px solid rgba(251,146,60,0.3);border-radius:4px;font-size:9px;color:var(--accent);font-weight:700;letter-spacing:1px}
+.nav-section{padding:14px 16px 6px}
+.nav-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;border-radius:8px;margin:2px 6px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted2);transition:all 0.2s;border:1px solid transparent}
+.nav-item:hover{background:rgba(251,146,60,0.07);color:var(--text)}
+.nav-item.active{background:rgba(251,146,60,0.12);color:var(--accent);border-color:rgba(251,146,60,0.2)}
+.nav-icon{font-size:15px}
+.nav-badge{margin-left:auto;padding:1px 7px;background:var(--red);color:#fff;border-radius:20px;font-size:10px;font-weight:700}
+.sidebar-footer{margin-top:auto;padding:14px;border-top:1px solid var(--border)}
+.user-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px;display:flex;align-items:center;gap:10px}
+.user-avatar{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#fff;flex-shrink:0}
+.user-name{font-size:13px;font-weight:600}
+.user-role{font-size:10px;color:var(--accent);font-weight:700}
+.btn-logout{margin-top:8px;width:100%;padding:8px;border-radius:8px;background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.2);color:var(--red);font-size:12px;font-weight:600;cursor:pointer;transition:all 0.2s}
+.btn-logout:hover{background:rgba(239,68,68,0.2)}
+.btn-userdash{margin-top:6px;width:100%;padding:8px;border-radius:8px;background:rgba(56,189,248,0.08);border:1px solid rgba(56,189,248,0.2);color:var(--blue);font-size:12px;font-weight:600;cursor:pointer}
+
+/* MAIN */
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{height:56px;padding:0 24px;display:flex;align-items:center;justify-content:space-between;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-title{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:var(--text)}
+.topbar-sub{font-size:11px;color:var(--muted)}
+.topbar-right{display:flex;gap:10px;align-items:center}
+.status-pill{padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);color:var(--green)}
+.content{flex:1;overflow-y:auto;padding:22px 26px}
+.tab-panel{display:none}.tab-panel.active{display:block}
+
+/* STAT CARDS */
+.stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--accent-bar,var(--accent))}
+.stat-label{font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.stat-value{font-family:'Space Mono',monospace;font-size:26px;font-weight:700;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+
+/* CARDS */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:18px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.card-title{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:7px}
+.card-sub{font-size:11px;color:var(--muted)}
+
+/* TABLE */
+.table-wrap{overflow-x:auto;border-radius:10px;border:1px solid var(--border)}
+.data-table{width:100%;border-collapse:collapse;font-size:12px}
+.data-table thead th{background:var(--surface2);padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;white-space:nowrap}
+.data-table tbody tr{border-top:1px solid var(--border);transition:background 0.15s}
+.data-table tbody tr:hover{background:rgba(251,146,60,0.04)}
+.data-table td{padding:10px 14px;vertical-align:middle}
+
+/* FORMS */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:9px 12px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--accent)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+
+/* BUTTONS */
+.btn{padding:8px 16px;border-radius:8px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:0.85;transform:translateY(-1px)}
+.btn-blue{background:rgba(56,189,248,0.12);color:var(--blue);border:1px solid rgba(56,189,248,0.2)}
+.btn-blue:hover{background:rgba(56,189,248,0.2)}
+.btn-green{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.btn-green:hover{background:rgba(52,211,153,0.2)}
+.btn-red{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+.btn-red:hover{background:rgba(239,68,68,0.2)}
+.btn-yellow{background:rgba(245,158,11,0.12);color:var(--accent2);border:1px solid rgba(245,158,11,0.2)}
+.btn-yellow:hover{background:rgba(245,158,11,0.2)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--border2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700}
+.badge-green{background:rgba(52,211,153,0.12);color:var(--green);border:1px solid rgba(52,211,153,0.2)}
+.badge-red{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.2)}
+.badge-yellow{background:rgba(245,158,11,0.12);color:var(--accent2);border:1px solid rgba(245,158,11,0.2)}
+.badge-blue{background:rgba(56,189,248,0.12);color:var(--blue);border:1px solid rgba(56,189,248,0.2)}
+.badge-orange{background:rgba(251,146,60,0.12);color:var(--accent);border:1px solid rgba(251,146,60,0.2)}
+.badge-purple{background:rgba(167,139,250,0.12);color:var(--purple);border:1px solid rgba(167,139,250,0.2)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:1000;display:none;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:28px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 20px 60px var(--shadow)}
+.modal-title{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:var(--text);margin-bottom:20px;display:flex;align-items:center;gap:8px}
+.modal-close{position:absolute;top:16px;right:16px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:4px 8px;cursor:pointer;color:var(--muted);font-size:12px}
+.modal-close:hover{color:var(--text)}
+
+/* VISIBILITY TOGGLE */
+.vis-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.vis-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s}
+.vis-card.enabled{border-color:rgba(52,211,153,0.3);background:rgba(52,211,153,0.04)}
+.vis-card.disabled{border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.04)}
+.vis-label{font-size:12px;font-weight:600;color:var(--text)}
+.vis-sub{font-size:10px;color:var(--muted);margin-top:2px}
+.toggle-wrap{display:flex;align-items:center;gap:6px}
+.toggle{position:relative;width:40px;height:22px;cursor:pointer;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--muted);border-radius:22px;transition:0.3s}
+.toggle-slider:before{content:'';position:absolute;height:16px;width:16px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:0.3s}
+input:checked+.toggle-slider{background:var(--green)}
+input:checked+.toggle-slider:before{transform:translateX(18px)}
+
+/* MISC */
+.divider{border:none;border-top:1px solid var(--border);margin:16px 0}
+.toast{position:fixed;bottom:24px;right:24px;padding:12px 20px;background:var(--surface);border:1px solid var(--border2);border-radius:10px;font-size:13px;color:var(--text);z-index:9999;box-shadow:0 8px 30px var(--shadow);transform:translateX(140%);transition:transform 0.3s}
+.toast.show{transform:translateX(0)}
+.toast.success{border-color:rgba(52,211,153,0.4);color:var(--green)}
+.toast.error{border-color:rgba(239,68,68,0.4);color:var(--red)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin 0.6s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:40px;color:var(--muted)}
+.confirm-text{font-size:13px;color:var(--muted2);margin-bottom:16px;line-height:1.6}
+.macro-form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.notice-box{padding:12px 16px;background:rgba(251,146,60,0.08);border:1px solid rgba(251,146,60,0.2);border-radius:10px;font-size:12px;color:var(--accent);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">FS</div>
+    <div>
+      <div class="brand-text">FinSight Admin</div>
+      <div class="brand-badge">ADMIN PANEL</div>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Dashboard</div>
+    <div class="nav-item active" onclick="switchTab('overview')">
+      <span class="nav-icon">📊</span><span>Overview</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">User Management</div>
+    <div class="nav-item" onclick="switchTab('users')">
+      <span class="nav-icon">👥</span><span>All Users</span>
+      {% if pending_count > 0 %}
+      <span class="nav-badge">{{ pending_count }}</span>
+      {% endif %}
+    </div>
+    <div class="nav-item" onclick="switchTab('approvals')">
+      <span class="nav-icon">⏳</span><span>Pending Approvals</span>
+      {% if pending_count > 0 %}
+      <span class="nav-badge">{{ pending_count }}</span>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Data Management</div>
+    <div class="nav-item" onclick="switchTab('macro')">
+      <span class="nav-icon">🌐</span><span>Macro Variables</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('stocks')">
+      <span class="nav-icon">📈</span><span>Stock Manager</span>
+    </div>
+  </div>
+
+  <div class="nav-section">
+    <div class="nav-label">Control</div>
+    <div class="nav-item" onclick="switchTab('visibility')">
+      <span class="nav-icon">👁</span><span>Panel Visibility</span>
+    </div>
+    <div class="nav-item" onclick="switchTab('settings')">
+      <span class="nav-icon">⚙️</span><span>Site Settings</span>
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <div class="user-card">
+      <div class="user-avatar">{{ username[0].upper() }}</div>
+      <div><div class="user-name">{{ username }}</div><div class="user-role">SUPER ADMIN</div></div>
+    </div>
+    <a href="/dashboard" target="_blank"><button class="btn-userdash">👤 User Dashboard ↗</button></a>
+    <a href="/admin/logout"><button class="btn-logout">🚪 Admin Logout</button></a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<div class="main">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title" id="topbarTitle">📊 Admin Overview</div>
+      <div class="topbar-sub">FinSight Analytics · Super Administrator · Full Access</div>
+    </div>
+    <div class="topbar-right">
+      <span class="status-pill">🟢 System Online</span>
+      <button class="btn btn-primary btn-sm" onclick="switchTab('approvals')">
+        ⏳ Pending ({{ pending_count }})
+      </button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── OVERVIEW ── -->
+    <div class="tab-panel active" id="panel-overview">
+      <div class="stat-grid">
+        <div class="stat-card" style="--accent-bar:var(--blue)">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value">{{ total_users }}</div>
+          <div class="stat-sub">Registered accounts</div>
+        </div>
+        <div class="stat-card" style="--accent-bar:var(--accent)">
+          <div class="stat-label">Pending Approvals</div>
+          <div class="stat-value" style="color:var(--accent)">{{ pending_count }}</div>
+          <div class="stat-sub">Awaiting your approval</div>
+        </div>
+        <div class="stat-card" style="--accent-bar:var(--green)">
+          <div class="stat-label">Macro Entries</div>
+          <div class="stat-value">{{ macro_rows|length }}</div>
+          <div class="stat-sub">Data records in DB</div>
+        </div>
+        <div class="stat-card" style="--accent-bar:var(--purple)">
+          <div class="stat-label">Total Predictions</div>
+          <div class="stat-value">{{ predictions_count }}</div>
+          <div class="stat-sub">Panel model runs</div>
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">⏳ Pending User Approvals</div>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('approvals')">View All</button>
+          </div>
+          {% set pending_users = users | selectattr('status','equalto','pending') | list %}
+          {% if pending_users %}
+            {% for u in pending_users[:5] %}
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)">
+              <div>
+                <div style="font-size:13px;font-weight:600">{{ u.username }}</div>
+                <div style="font-size:11px;color:var(--muted)">{{ u.email }} · {{ u.created_at[:10] }}</div>
+              </div>
+              <div style="display:flex;gap:6px">
+                <button class="btn btn-green btn-sm" onclick="approveUser({{ u.id }}, '{{ u.username }}')">✓ Approve</button>
+                <button class="btn btn-red btn-sm" onclick="blockUser({{ u.id }}, '{{ u.username }}')">✗ Block</button>
+              </div>
+            </div>
+            {% endfor %}
+          {% else %}
+            <div class="empty">✅ No pending approvals</div>
+          {% endif %}
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title">🌐 Latest Macro Updates</div>
+            <button class="btn btn-primary btn-sm" onclick="switchTab('macro')">Manage</button>
+          </div>
+          {% for m in macro_rows[:6] %}
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px">
+            <div>
+              <span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--accent)">{{ m.year }}</span>
+              <span style="color:var(--muted);margin-left:8px">{{ m.entry_date }}</span>
+            </div>
+            <div style="display:flex;gap:10px;color:var(--muted2)">
+              <span>GDP: <strong style="color:var(--green)">{{ m.GDP_Growth }}%</strong></span>
+              <span>INF: <strong style="color:var(--red)">{{ m.Inflation }}%</strong></span>
+              <span>REPO: <strong>{{ m.Interest_Rate }}%</strong></span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">📈 Custom Stocks Added by Admin</div></div>
+        {% if custom_stocks %}
+        <div class="table-wrap"><table class="data-table">
+          <thead><tr><th>Symbol</th><th>Name</th><th>Sector</th><th>Price</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for s in custom_stocks %}
+            <tr>
+              <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--accent)">{{ s.symbol }}</span></td>
+              <td>{{ s.name }}</td><td>{{ s.sector }}</td>
+              <td style="font-family:'Space Mono',monospace">₹{{ s.price }}</td>
+              <td><span class="badge {{ 'badge-green' if s.is_active else 'badge-red' }}">{{ 'Active' if s.is_active else 'Hidden' }}</span></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table></div>
+        {% else %}
+        <div class="empty">No custom stocks added yet</div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── ALL USERS ── -->
+    <div class="tab-panel" id="panel-users">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">👥 All Users</div>
+            <div class="card-sub">Manage accounts, roles, and access</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddUserModal()">➕ Add User</button>
+        </div>
+        <div class="table-wrap"><table class="data-table" id="usersTable">
+          <thead><tr>
+            <th>#</th><th>Username</th><th>Email</th><th>Phone</th>
+            <th>Broker</th><th>Status</th><th>Role</th><th>Joined</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="usersTableBody">
+            {% for u in users %}
+            <tr id="urow-{{ u.id }}">
+              <td style="color:var(--muted)">{{ u.id }}</td>
+              <td><strong>{{ u.username }}</strong></td>
+              <td style="color:var(--muted2)">{{ u.email }}</td>
+              <td style="color:var(--muted2)">{{ u.phone or '—' }}</td>
+              <td>{{ u.broker or 'Zerodha' }}</td>
+              <td>
+                {% if u.status == 'approved' %}<span class="badge badge-green">✓ Approved</span>
+                {% elif u.status == 'pending' %}<span class="badge badge-yellow">⏳ Pending</span>
+                {% elif u.status == 'blocked' %}<span class="badge badge-red">✗ Blocked</span>
+                {% else %}<span class="badge badge-orange">{{ u.status }}</span>{% endif %}
+              </td>
+              <td>
+                {% if u.is_admin %}<span class="badge badge-purple">👑 Admin</span>
+                {% else %}<span class="badge badge-blue">👤 User</span>{% endif %}
+              </td>
+              <td style="font-size:11px;color:var(--muted)">{{ u.created_at[:10] if u.created_at else '—' }}</td>
+              <td>
+                {% if not u.is_admin %}
+                <div style="display:flex;gap:5px;flex-wrap:wrap">
+                  {% if u.status != 'approved' %}<button class="btn btn-green btn-sm" onclick="approveUser({{ u.id }},'{{ u.username }}')">✓</button>{% endif %}
+                  {% if u.status != 'blocked' %}<button class="btn btn-yellow btn-sm" onclick="blockUser({{ u.id }},'{{ u.username }}')">⊘</button>{% endif %}
+                  <button class="btn btn-red btn-sm" onclick="deleteUser({{ u.id }},'{{ u.username }}')">🗑</button>
+                </div>
+                {% else %}<span style="font-size:10px;color:var(--muted)">Protected</span>{% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── PENDING APPROVALS ── -->
+    <div class="tab-panel" id="panel-approvals">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">⏳ Pending User Approvals</div>
+            <div class="card-sub">New registrations awaiting your approval before they can log in</div>
+          </div>
+          <button class="btn btn-green" onclick="approveAll()">✓ Approve All</button>
+        </div>
+        <div id="pendingList">
+          {% set pending = users | selectattr('status','equalto','pending') | list %}
+          {% if pending %}
+          <div class="table-wrap"><table class="data-table">
+            <thead><tr><th>Username</th><th>Email</th><th>Phone</th><th>Registered</th><th>Actions</th></tr></thead>
+            <tbody id="pendingTableBody">
+              {% for u in pending %}
+              <tr id="prow-{{ u.id }}">
+                <td><strong>{{ u.username }}</strong></td>
+                <td>{{ u.email }}</td>
+                <td>{{ u.phone or '—' }}</td>
+                <td style="font-size:11px;color:var(--muted)">{{ u.created_at[:10] }}</td>
+                <td>
+                  <button class="btn btn-green btn-sm" onclick="approveUser({{ u.id }},'{{ u.username }}')">✓ Approve</button>
+                  <button class="btn btn-red btn-sm" onclick="blockUser({{ u.id }},'{{ u.username }}')">✗ Block</button>
+                  <button class="btn btn-ghost btn-sm" onclick="deleteUser({{ u.id }},'{{ u.username }}')">🗑</button>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table></div>
+          {% else %}
+          <div class="empty">🎉 No pending approvals! All users are processed.</div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── MACRO DATA ── -->
+    <div class="tab-panel" id="panel-macro">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">🌐 Macroeconomic Variables</div>
+            <div class="card-sub">Day-by-day data entries — latest entry per year shown to users</div>
+          </div>
+          <button class="btn btn-primary" onclick="openMacroModal()">➕ Add New Entry</button>
+        </div>
+        <div class="notice-box">⚡ Data is saved with date stamps. The <strong>most recent updated_at entry per year</strong> is shown to users in their dashboard. Add a new entry each day to update values — older entries are kept as audit history.</div>
+        <div class="table-wrap"><table class="data-table">
+          <thead><tr>
+            <th>Year</th><th>Entry Date</th><th>GDP%</th><th>Inflation%</th>
+            <th>Repo Rate%</th><th>Exchange(₹)</th><th>M3%</th><th>IIP%</th>
+            <th>Notes</th><th>Updated At</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="macroTableBody">
+            {% set seen_years = [] %}
+            {% for m in macro_rows %}
+            {% set is_latest = m.year not in seen_years %}
+            {% if is_latest %}{% set _ = seen_years.append(m.year) %}{% endif %}
+            <tr id="mrow-{{ m.id }}" style="{{ 'background:rgba(52,211,153,0.04);' if is_latest else 'opacity:0.7;' }}">
+              <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--accent)">{{ m.year }}</span></td>
+              <td style="font-size:11px;color:var(--muted2)">{{ m.entry_date }}</td>
+              <td><span class="{{ 'badge badge-green' if m.GDP_Growth > 0 else 'badge-red' }}">{{ m.GDP_Growth }}</span></td>
+              <td><span class="badge badge-yellow">{{ m.Inflation }}</span></td>
+              <td>{{ m.Interest_Rate }}</td>
+              <td>{{ m.Exchange_Rate }}</td>
+              <td>{{ m.M3_Growth }}</td>
+              <td><span class="{{ 'badge badge-green' if m.IIP > 0 else 'badge-red' }}">{{ m.IIP }}</span></td>
+              <td style="font-size:11px;color:var(--muted);max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="{{ m.notes or '' }}">{{ m.notes or '—' }}</td>
+              <td style="font-size:10px;color:var(--muted)">{{ (m.updated_at or '')[:16] }}</td>
+              <td>
+                {% if is_latest %}
+                <span class="badge badge-green">✓ Active</span>
+                {% else %}
+                <span class="badge badge-orange">History</span>
+                {% endif %}
+              </td>
+              <td>
+                <button class="btn btn-yellow btn-sm" onclick='openEditMacro({{ m | tojson }})'>✏️</button>
+                <button class="btn btn-red btn-sm" onclick="deleteMacro({{ m.id }})">🗑</button>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── STOCK MANAGER ── -->
+    <div class="tab-panel" id="panel-stocks">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">📈 Stock Manager</div>
+            <div class="card-sub">Add / edit / remove stocks shown in user dashboard</div>
+          </div>
+          <button class="btn btn-primary" onclick="openAddStockModal()">➕ Add Stock</button>
+        </div>
+        <div class="table-wrap"><table class="data-table">
+          <thead><tr>
+            <th>Symbol</th><th>Name</th><th>Sector</th><th>Exchange</th>
+            <th>Price</th><th>Change%</th><th>52W H/L</th><th>MCap</th><th>Status</th><th>Actions</th>
+          </tr></thead>
+          <tbody id="stocksTableBody">
+            {% for s in custom_stocks %}
+            <tr id="srow-{{ s.id }}">
+              <td><span style="font-family:'Space Mono',monospace;font-weight:700;color:var(--blue)">{{ s.symbol }}</span></td>
+              <td>{{ s.name }}</td>
+              <td>{{ s.sector }}</td>
+              <td><span class="badge badge-blue">{{ s.exchange }}</span></td>
+              <td style="font-family:'Space Mono',monospace">₹{{ s.price }}</td>
+              <td><span class="{{ 'badge badge-green' if s.pct_change >= 0 else 'badge-red' }}">{{ '+' if s.pct_change >= 0 else '' }}{{ s.pct_change }}%</span></td>
+              <td style="font-size:11px;color:var(--muted2)">₹{{ s.high_52w }} / ₹{{ s.low_52w }}</td>
+              <td>{{ s.mcap }}</td>
+              <td><span class="badge {{ 'badge-green' if s.is_active else 'badge-red' }}">{{ 'Active' if s.is_active else 'Hidden' }}</span></td>
+              <td>
+                <button class="btn btn-yellow btn-sm" onclick='openEditStock({{ s | tojson }})'>✏️</button>
+                <button class="btn btn-red btn-sm" onclick="deleteStock({{ s.id }})">🗑</button>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not custom_stocks %}
+            <tr><td colspan="10" class="empty">No custom stocks added. Use the synthetic + CSV stocks by default.</td></tr>
+            {% endif %}
+          </tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <!-- ── VISIBILITY ── -->
+    <div class="tab-panel" id="panel-visibility">
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <div class="card-title">👁 Panel Visibility Control</div>
+            <div class="card-sub">Toggle which sections users can see in their dashboard</div>
+          </div>
+          <button class="btn btn-primary" onclick="saveVisibility()">💾 Save All</button>
+        </div>
+        <div style="margin-bottom:14px;font-size:12px;color:var(--muted2)">Changes take effect immediately for all users on next page load.</div>
+        <div class="vis-grid">
+          {% set panels = [
+            ('show_live_stocks','📈 Live Stocks','Stock dashboard table'),
+            ('show_macro','🌐 Macro Indicators','Charts & macro data'),
+            ('show_regression','📐 Regression Analysis','Panel / OLS models'),
+            ('show_prediction','🔮 Manual Prediction','Prediction module'),
+            ('show_history','📋 Prediction History','User history tab'),
+            ('show_ai','🤖 AI Assistant','Claude-powered AI chat'),
+          ] %}
+          {% for key, label, desc in panels %}
+          {% set enabled = settings.get(key,'1') == '1' %}
+          <div class="vis-card {{ 'enabled' if enabled else 'disabled' }}" id="viscard-{{ key }}">
+            <div>
+              <div class="vis-label">{{ label }}</div>
+              <div class="vis-sub">{{ desc }}</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="vis-{{ key }}" {{ 'checked' if enabled else '' }} onchange="updateVisCard('{{ key }}')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+        <hr class="divider">
+        <div class="card-title" style="margin-bottom:14px">🌡️ Macro Variable Visibility</div>
+        <div class="vis-grid">
+          {% set macrovars = [
+            ('show_gdp','📊 GDP Growth','GDP indicator'),
+            ('show_inflation','💹 Inflation','CPI data'),
+            ('show_interest','🏦 Interest Rate','Repo rate'),
+            ('show_exchange','💱 Exchange Rate','INR/USD'),
+            ('show_m3','💰 M3 Money Supply','M3 growth'),
+            ('show_iip','🏭 IIP','Industrial production'),
+          ] %}
+          {% for key, label, desc in macrovars %}
+          {% set enabled = settings.get(key,'1') == '1' %}
+          <div class="vis-card {{ 'enabled' if enabled else 'disabled' }}" id="viscard-{{ key }}">
+            <div>
+              <div class="vis-label">{{ label }}</div>
+              <div class="vis-sub">{{ desc }}</div>
+            </div>
+            <label class="toggle">
+              <input type="checkbox" id="vis-{{ key }}" {{ 'checked' if enabled else '' }} onchange="updateVisCard('{{ key }}')">
+              <span class="toggle-slider"></span>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="tab-panel" id="panel-settings">
+      <div class="card">
+        <div class="card-header"><div class="card-title">⚙️ Site Settings</div></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">Market Status</label>
+            <select class="form-input" id="market_status">
+              <option value="open" {{ 'selected' if settings.get('market_status','open')=='open' else '' }}>🟢 Open</option>
+              <option value="closed" {{ 'selected' if settings.get('market_status','')=='closed' else '' }}>🔴 Closed</option>
+              <option value="holiday" {{ 'selected' if settings.get('market_status','')=='holiday' else '' }}>🟡 Holiday</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Site Notice (shown to users)</label>
+            <input class="form-input" type="text" id="site_notice" value="{{ settings.get('site_notice','') }}" placeholder="Optional announcement message...">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="saveSiteSettings()">💾 Save Settings</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">🔑 Change Admin Password</div></div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label">New Password</label>
+            <input class="form-input" type="password" id="new_password" placeholder="Enter new password">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirm Password</label>
+            <input class="form-input" type="password" id="confirm_password" placeholder="Confirm new password">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="changeAdminPassword()">🔒 Update Password</button>
+      </div>
+
+      <div class="card">
+        <div class="card-header"><div class="card-title">ℹ️ System Info</div></div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;font-size:12px">
+          <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="color:var(--muted);margin-bottom:4px">Default Admin</div>
+            <div style="font-family:'Space Mono',monospace;color:var(--accent)">admin@finsight.com</div>
+          </div>
+          <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="color:var(--muted);margin-bottom:4px">Default Password</div>
+            <div style="font-family:'Space Mono',monospace;color:var(--accent)">admin123</div>
+          </div>
+          <div style="padding:12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border)">
+            <div style="color:var(--muted);margin-bottom:4px">Research Model</div>
+            <div style="font-family:'Space Mono',monospace;color:var(--accent)">Panel FE/RE + Hausman</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<!-- ─── MODALS ──────────────────────────────────────────────────────────────────── -->
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addUserModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('addUserModal')">✕ Close</button>
+    <div class="modal-title">➕ Add New User</div>
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Username</label><input class="form-input" id="add_username" placeholder="johndoe"></div>
+      <div class="form-group"><label class="form-label">Email</label><input class="form-input" id="add_email" type="email" placeholder="user@example.com"></div>
+      <div class="form-group"><label class="form-label">Password</label><input class="form-input" id="add_password" type="password" placeholder="Min 6 chars"></div>
+      <div class="form-group"><label class="form-label">Role</label>
+        <select class="form-input" id="add_is_admin"><option value="0">👤 Regular User</option><option value="1">👑 Admin</option></select>
+      </div>
+    </div>
+    <div style="margin-top:4px;font-size:11px;color:var(--muted)">User will be auto-approved (added by admin).</div>
+    <div style="display:flex;gap:10px;margin-top:16px">
+      <button class="btn btn-primary" onclick="addUser()">✓ Create User</button>
+      <button class="btn btn-ghost" onclick="closeModal('addUserModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Macro Modal -->
+<div class="modal-overlay" id="macroModal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('macroModal')">✕ Close</button>
+    <div class="modal-title" id="macroModalTitle">➕ Add Macro Entry</div>
+    <input type="hidden" id="macro_edit_id" value="">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Year</label>
+        <input class="form-input" type="number" id="macro_year" placeholder="2024" min="2000" max="2030">
+      </div>
+      <div class="form-group"><label class="form-label">Entry Date</label>
+        <input class="form-input" type="date" id="macro_entry_date">
+      </div>
+    </div>
+    <div class="macro-form-grid">
+      <div class="form-group"><label class="form-label">GDP Growth (%)</label><input class="form-input" type="number" id="macro_gdp" step="0.01" placeholder="8.2"></div>
+      <div class="form-group"><label class="form-label">Inflation (%)</label><input class="form-input" type="number" id="macro_inf" step="0.01" placeholder="4.7"></div>
+      <div class="form-group"><label class="form-label">Repo Rate (%)</label><input class="form-input" type="number" id="macro_interest" step="0.01" placeholder="6.5"></div>
+      <div class="form-group"><label class="form-label">Exchange Rate (₹/USD)</label><input class="form-input" type="number" id="macro_exchange" step="0.01" placeholder="84.0"></div>
+      <div class="form-group"><label class="form-label">M3 Growth (%)</label><input class="form-input" type="number" id="macro_m3" step="0.01" placeholder="9.2"></div>
+      <div class="form-group"><label class="form-label">IIP (%)</label><input class="form-input" type="number" id="macro_iip" step="0.01" placeholder="4.2"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes</label><input class="form-input" id="macro_notes" placeholder="e.g. Q3 RBI update..."></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-primary" onclick="saveMacro()">💾 Save Entry</button>
+      <button class="btn btn-ghost" onclick="closeModal('macroModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Stock Modal -->
+<div class="modal-overlay" id="stockModal">
+  <div class="modal" style="max-width:640px">
+    <button class="modal-close" onclick="closeModal('stockModal')">✕ Close</button>
+    <div class="modal-title" id="stockModalTitle">➕ Add New Stock</div>
+    <input type="hidden" id="stock_edit_id" value="">
+    <div class="form-grid">
+      <div class="form-group"><label class="form-label">Symbol *</label><input class="form-input" id="s_symbol" placeholder="e.g. ZOMATO"></div>
+      <div class="form-group"><label class="form-label">Company Name</label><input class="form-input" id="s_name" placeholder="Zomato Ltd."></div>
+      <div class="form-group"><label class="form-label">Sector</label>
+        <select class="form-input" id="s_sector">
+          <option>Technology</option><option>Banking</option><option>Banks</option><option>Energy</option>
+          <option>FMCG</option><option>Auto</option><option>Pharma</option><option>Healthcare</option>
+          <option>Infrastructure</option><option>Finance</option><option>Metals</option>
+          <option>Media &amp; Entertainment</option><option>Chemicals</option><option>Agri</option><option>Other</option>
+        </select>
+      </div>
+      <div class="form-group"><label class="form-label">Exchange</label>
+        <select class="form-input" id="s_exchange"><option>NSE</option><option>BSE</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Market Cap</label>
+        <select class="form-input" id="s_mcap"><option>Large Cap</option><option>Mid Cap</option><option>Small Cap</option></select>
+      </div>
+      <div class="form-group"><label class="form-label">Investment Term</label>
+        <select class="form-input" id="s_term"><option>Long-term</option><option>Short-term</option></select>
+      </div>
+    </div>
+    <div class="macro-form-grid">
+      <div class="form-group"><label class="form-label">Live Price (₹) *</label><input class="form-input" type="number" id="s_price" step="0.01" placeholder="500.00"></div>
+      <div class="form-group"><label class="form-label">Change (₹)</label><input class="form-input" type="number" id="s_change" step="0.01" placeholder="5.50"></div>
+      <div class="form-group"><label class="form-label">Change %</label><input class="form-input" type="number" id="s_pct" step="0.01" placeholder="1.10"></div>
+      <div class="form-group"><label class="form-label">Today High</label><input class="form-input" type="number" id="s_high" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Today Low</label><input class="form-input" type="number" id="s_low" step="0.01"></div>
+      <div class="form-group"><label class="form-label">Prev Close</label><input class="form-input" type="number" id="s_prev" step="0.01"></div>
+      <div class="form-group"><label class="form-label">52W High</label><input class="form-input" type="number" id="s_52h" step="0.01"></div>
+      <div class="form-group"><label class="form-label">52W Low</label><input class="form-input" type="number" id="s_52l" step="0.01"></div>
+      <div class="form-group"><label class="form-label">F&amp;O Listed</label>
+        <select class="form-input" id="s_fno"><option value="0">No</option><option value="1">Yes</option></select>
+      </div>
+    </div>
+    <div class="form-group" id="s_active_group">
+      <label class="form-label">Visibility</label>
+      <select class="form-input" id="s_active"><option value="1">✅ Active (Visible to users)</option><option value="0">🔒 Hidden</option></select>
+    </div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn btn-primary" onclick="saveStock()">💾 Save Stock</button>
+      <button class="btn btn-ghost" onclick="closeModal('stockModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- Confirm Modal -->
+<div class="modal-overlay" id="confirmModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title" id="confirmTitle">Confirm Action</div>
+    <div class="confirm-text" id="confirmText"></div>
+    <div style="display:flex;gap:10px">
+      <button class="btn btn-red" id="confirmBtn">Confirm</button>
+      <button class="btn btn-ghost" onclick="closeModal('confirmModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── NAVIGATION ────────────────────────────────────────────────────────────────────
+const tabTitles = {
+  overview:'📊 Admin Overview', users:'👥 User Management',
+  approvals:'⏳ Pending Approvals', macro:'🌐 Macro Data Manager',
+  stocks:'📈 Stock Manager', visibility:'👁 Panel Visibility',
+  settings:'⚙️ Site Settings'
+};
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-'+tab).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => {
+    const txt = n.textContent.toLowerCase();
+    if(txt.includes(tab.split('-')[0].substring(0,4))) n.classList.add('active');
+  });
+  document.getElementById('topbarTitle').textContent = tabTitles[tab]||tab;
+}
+
+// ── USER ACTIONS ─────────────────────────────────────────────────────────────────
+function approveUser(uid, name) {
+  confirm2(`Approve user <strong>${name}</strong>? They will be able to log in.`, 'Approve', () => {
+    api(`/admin/user/${uid}/approve`, 'POST').then(d => {
+      if(d && d.success) { showToast('✅ '+name+' approved!','success'); updateUserStatus(uid,'approved'); }
+      else showToast('❌ '+msg(d),'error');
+    });
+  });
+}
+
+function blockUser(uid, name) {
+  confirm2(`Block user <strong>${name}</strong>? They will not be able to log in.`, 'Block', () => {
+    api(`/admin/user/${uid}/block`, 'POST').then(d => {
+      if(d.success) { showToast('⊘ '+name+' blocked','success'); updateUserStatus(uid,'blocked'); }
+    });
+  });
+}
+
+function deleteUser(uid, name) {
+  confirm2(`Permanently delete <strong>${name}</strong>? This cannot be undone.`, 'Delete', () => {
+    apiFetch(`/admin/user/${uid}/delete`, 'DELETE').then(d => {
+      if(d.success) {
+        showToast('🗑 User deleted','success');
+        const r1 = document.getElementById('urow-'+uid);
+        const r2 = document.getElementById('prow-'+uid);
+        if(r1) r1.remove(); if(r2) r2.remove();
+      }
+    });
+  });
+}
+
+function approveAll() {
+  const rows = document.querySelectorAll('[id^="prow-"]');
+  if(!rows.length) return showToast('No pending users','error');
+  confirm2(`Approve all <strong>${rows.length}</strong> pending users?`, 'Approve All', async () => {
+    for(const row of rows) {
+      const uid = row.id.replace('prow-','');
+      await api(`/admin/user/${uid}/approve`,'POST');
+      row.remove();
+      const ur = document.getElementById('urow-'+uid);
+      if(ur) updateUserStatus(parseInt(uid),'approved');
+    }
+    showToast('✅ All users approved!','success');
+  });
+}
+
+function openAddUserModal() {
+  ['add_username','add_email','add_password'].forEach(id => document.getElementById(id).value='');
+  openModal('addUserModal');
+}
+
+function addUser() {
+  const data = {username:v('add_username'),email:v('add_email'),password:v('add_password'),is_admin:v('add_is_admin')};
+  if(!data.username||!data.email||!data.password) return showToast('Fill all fields','error');
+  api('/admin/user/add','POST',data).then(d => {
+    if(d && d.success) { showToast('✅ '+msg(d),'success'); closeModal('addUserModal'); setTimeout(()=>location.reload(),800); }
+    else showToast('❌ '+msg(d),'error');
+  });
+}
+
+function updateUserStatus(uid, status) {
+  const row = document.getElementById('urow-'+uid);
+  if(row) {
+    const statusCell = row.cells[5];
+    const colors = {approved:'badge-green',pending:'badge-yellow',blocked:'badge-red'};
+    const icons = {approved:'✓ Approved',pending:'⏳ Pending',blocked:'✗ Blocked'};
+    statusCell.innerHTML = `<span class="badge ${colors[status]}">${icons[status]}</span>`;
+  }
+  const prow = document.getElementById('prow-'+uid);
+  if(prow && status !== 'pending') prow.remove();
+}
+
+// ── MACRO ACTIONS ─────────────────────────────────────────────────────────────────
+function openMacroModal() {
+  document.getElementById('macro_edit_id').value = '';
+  document.getElementById('macroModalTitle').textContent = '➕ Add Macro Entry';
+  const today = new Date().toISOString().slice(0,10);
+  document.getElementById('macro_entry_date').value = today;
+  document.getElementById('macro_year').value = new Date().getFullYear();
+  ['macro_gdp','macro_inf','macro_interest','macro_exchange','macro_m3','macro_iip','macro_notes'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  openModal('macroModal');
+}
+
+function openEditMacro(m) {
+  document.getElementById('macro_edit_id').value = m.id;
+  document.getElementById('macroModalTitle').textContent = '✏️ Edit Macro Entry';
+  document.getElementById('macro_year').value = m.year;
+  document.getElementById('macro_entry_date').value = m.entry_date;
+  document.getElementById('macro_gdp').value = m.GDP_Growth;
+  document.getElementById('macro_inf').value = m.Inflation;
+  document.getElementById('macro_interest').value = m.Interest_Rate;
+  document.getElementById('macro_exchange').value = m.Exchange_Rate;
+  document.getElementById('macro_m3').value = m.M3_Growth;
+  document.getElementById('macro_iip').value = m.IIP;
+  document.getElementById('macro_notes').value = m.notes || '';
+  openModal('macroModal');
+}
+
+function saveMacro() {
+  const editId = v('macro_edit_id');
+  const yearVal = v('macro_year');
+  const dateVal = v('macro_entry_date');
+  if (!yearVal) return showToast('⚠️ Year is required', 'error');
+  if (!dateVal) return showToast('⚠️ Entry date is required', 'error');
+
+  const payload = {
+    year:         parseInt(yearVal),
+    entry_date:   dateVal,
+    GDP_Growth:   parseFloat(v('macro_gdp')   || 0),
+    Inflation:    parseFloat(v('macro_inf')    || 0),
+    Interest_Rate:parseFloat(v('macro_interest')|| 0),
+    Exchange_Rate:parseFloat(v('macro_exchange')|| 0),
+    M3_Growth:    parseFloat(v('macro_m3')     || 0),
+    IIP:          parseFloat(v('macro_iip')    || 0),
+    notes:        v('macro_notes')
+  };
+
+  const url = editId ? `/admin/macro/${editId}/update` : '/admin/macro/add';
+  api(url, 'POST', payload).then(d => {
+    if (d && d.success) {
+      showToast('✅ ' + msg(d), 'success');
+      closeModal('macroModal');
+      setTimeout(() => location.reload(), 700);
+    } else {
+      showToast('❌ ' + msg(d), 'error');
+    }
+  });
+}
+
+function deleteMacro(mid) {
+  confirm2('Delete this macro entry permanently?', 'Delete', () => {
+    apiFetch(`/admin/macro/${mid}/delete`,'DELETE').then(d => {
+      if(d.success) { showToast('🗑 Deleted','success'); const r=document.getElementById('mrow-'+mid); if(r) r.remove(); }
+    });
+  });
+}
+
+// ── STOCK ACTIONS ─────────────────────────────────────────────────────────────────
+function openAddStockModal() {
+  document.getElementById('stock_edit_id').value = '';
+  document.getElementById('stockModalTitle').textContent = '➕ Add New Stock';
+  document.getElementById('s_symbol').disabled = false;
+  ['s_symbol','s_name','s_price','s_change','s_pct','s_high','s_low','s_prev','s_52h','s_52l'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('s_active').value = '1';
+  openModal('stockModal');
+}
+
+function openEditStock(s) {
+  document.getElementById('stock_edit_id').value = s.id;
+  document.getElementById('stockModalTitle').textContent = '✏️ Edit Stock: ' + s.symbol;
+  document.getElementById('s_symbol').value = s.symbol; document.getElementById('s_symbol').disabled = true;
+  document.getElementById('s_name').value = s.name||'';
+  document.getElementById('s_sector').value = s.sector||'Other';
+  document.getElementById('s_exchange').value = s.exchange||'NSE';
+  document.getElementById('s_mcap').value = s.mcap||'Large Cap';
+  document.getElementById('s_term').value = s.term||'Long-term';
+  document.getElementById('s_price').value = s.price;
+  document.getElementById('s_change').value = s.change_val;
+  document.getElementById('s_pct').value = s.pct_change;
+  document.getElementById('s_high').value = s.today_high;
+  document.getElementById('s_low').value = s.today_low;
+  document.getElementById('s_prev').value = s.prev_close;
+  document.getElementById('s_52h').value = s.high_52w;
+  document.getElementById('s_52l').value = s.low_52w;
+  document.getElementById('s_fno').value = s.fno ? '1' : '0';
+  document.getElementById('s_active').value = s.is_active ? '1' : '0';
+  openModal('stockModal');
+}
+
+function saveStock() {
+  const editId = v('stock_edit_id');
+  const price = parseFloat(v('s_price')||0);
+  const payload = {
+    symbol: v('s_symbol').toUpperCase(), name: v('s_name'),
+    sector: v('s_sector'), exchange: v('s_exchange'), mcap: v('s_mcap'), term: v('s_term'),
+    price, change_val: parseFloat(v('s_change')||0), pct_change: parseFloat(v('s_pct')||0),
+    today_high: parseFloat(v('s_high')||price), today_low: parseFloat(v('s_low')||price),
+    prev_close: parseFloat(v('s_prev')||price), high_52w: parseFloat(v('s_52h')||price),
+    low_52w: parseFloat(v('s_52l')||price), fno: parseInt(v('s_fno')||0),
+    is_active: parseInt(v('s_active')||1)
+  };
+  if(!payload.symbol||!payload.price) return showToast('Symbol and Price required','error');
+  const url = editId ? `/admin/stock/${editId}/update` : '/admin/stock/add';
+  api(url, 'POST', payload).then(d => {
+    if (d && d.success) {
+      showToast('✅ ' + msg(d), 'success');
+      closeModal('stockModal');
+      setTimeout(() => location.reload(), 700);
+    } else {
+      showToast('❌ ' + msg(d), 'error');
+    }
+  });
+}
+
+function deleteStock(sid) {
+  confirm2('Remove this stock from the dashboard?', 'Delete', () => {
+    apiFetch(`/admin/stock/${sid}/delete`,'DELETE').then(d => {
+      if(d.success) { showToast('🗑 Stock removed','success'); const r=document.getElementById('srow-'+sid); if(r) r.remove(); }
+    });
+  });
+}
+
+// ── VISIBILITY ────────────────────────────────────────────────────────────────────
+function updateVisCard(key) {
+  const cb = document.getElementById('vis-'+key);
+  const card = document.getElementById('viscard-'+key);
+  if(cb.checked) { card.classList.add('enabled'); card.classList.remove('disabled'); }
+  else { card.classList.add('disabled'); card.classList.remove('enabled'); }
+}
+
+function saveVisibility() {
+  const keys = ['show_live_stocks','show_macro','show_regression','show_prediction','show_history','show_ai',
+                 'show_gdp','show_inflation','show_interest','show_exchange','show_m3','show_iip'];
+  const payload = {};
+  keys.forEach(k => {
+    const el = document.getElementById('vis-'+k);
+    if(el) payload[k] = el.checked ? '1' : '0';
+  });
+  api('/admin/settings/update','POST',payload).then(d => {
+    if(d && d.success) showToast('✅ Visibility settings saved!','success');
+    else showToast('❌ '+msg(d),'error');
+  });
+}
+
+// ── SITE SETTINGS ─────────────────────────────────────────────────────────────────
+function saveSiteSettings() {
+  const payload = {
+    market_status: document.getElementById('market_status').value,
+    site_notice: document.getElementById('site_notice').value
+  };
+  api('/admin/settings/update','POST',payload).then(d => {
+    if(d && d.success) showToast('✅ Site settings saved!','success');
+    else showToast('❌ '+msg(d),'error');
+  });
+}
+
+function changeAdminPassword() {
+  const np = v('new_password'); const cp = v('confirm_password');
+  if(!np) return showToast('Enter a new password','error');
+  if(np !== cp) return showToast('Passwords do not match','error');
+  if(np.length < 6) return showToast('Password must be at least 6 characters','error');
+  showToast('⚠️ Password change API not connected yet — implement via /admin/change-password route','error');
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────────
+function v(id) { return document.getElementById(id)?.value || ''; }
+
+function api(url, method='POST', body=null) {
+  return apiFetch(url, method, body);
+}
+
+// Safe message extractor — handles {message:...} and {error:...} and network errors
+function msg(d) { return d.message || d.error || 'An unexpected error occurred. Please refresh the page.'; }
+
+function apiFetch(url, method='POST', body=null) {
+  return fetch(url, {
+    method,
+    credentials: 'same-origin',
+    headers: body ? {'Content-Type': 'application/json'} : {},
+    body: body ? JSON.stringify(body) : undefined
+  })
+  .then(r => {
+    if (!r.ok && r.status === 401) {
+      showToast('⚠️ Session expired. Redirecting to login...', 'error');
+      setTimeout(() => window.location = '/login', 1500);
+      return {success: false, message: 'Session expired'};
+    }
+    return r.json();
+  })
+  .catch(e => {
+    showToast('❌ Network error: ' + e.message, 'error');
+    return {success: false, message: e.message};
+  });
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function confirm2(html, btnLabel, cb) {
+  document.getElementById('confirmText').innerHTML = html;
+  document.getElementById('confirmBtn').textContent = btnLabel;
+  document.getElementById('confirmBtn').onclick = () => { closeModal('confirmModal'); cb(); };
+  openModal('confirmModal');
+}
+
+function showToast(msg, type='') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast '+(type||''); t.classList.add('show');
+  setTimeout(() => t.classList.remove('show','success','error'), 3000);
+}
+
+// Close modals on backdrop click
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if(e.target === el) el.classList.remove('open'); });
+});
+
+// Check for pending approvals badge on load
+document.addEventListener('DOMContentLoaded', () => {
+  const pending = {{ pending_count }};
+  if(pending > 0) showToast(`⏳ ${pending} user${pending>1?'s':''} awaiting approval`, 'error');
+});
+</script>
+</body>
+</html>

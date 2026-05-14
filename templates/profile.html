@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinSight Analytics — Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#050810;--surface:#0c1020;--surface2:#111827;--border:rgba(99,179,237,0.12);--border2:rgba(99,179,237,0.25);--accent:#38bdf8;--accent2:#818cf8;--green:#34d399;--red:#f87171;--text:#e2e8f0;--muted:#64748b;--muted2:#94a3b8}
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);min-height:100vh;padding:30px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px}
+.back-btn{display:flex;align-items:center;gap:8px;color:var(--muted2);text-decoration:none;font-size:14px;padding:8px 14px;background:var(--surface);border:1px solid var(--border);border-radius:8px;transition:all 0.2s}
+.back-btn:hover{color:var(--accent);border-color:var(--border2)}
+.logo{font-family:'Space Mono',monospace;font-size:15px;font-weight:700;color:var(--text)}
+.grid{display:grid;grid-template-columns:1fr 2fr;gap:20px;max-width:900px;margin:0 auto}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
+.card-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:20px}
+.avatar-box{text-align:center;margin-bottom:20px}
+.avatar{width:80px;height:80px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;color:#fff;margin:0 auto 10px;font-family:'Space Mono',monospace}
+.username{font-family:'Space Mono',monospace;font-size:16px;font-weight:700}
+.useremail{font-size:12px;color:var(--muted);margin-top:4px}
+.info-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px}
+.info-row:last-child{border-bottom:none}
+.info-key{color:var(--muted)}
+.info-val{color:var(--text);font-weight:500}
+.wl-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.wl-chip{padding:3px 10px;background:rgba(56,189,248,0.1);border:1px solid rgba(56,189,248,0.2);border-radius:6px;font-family:'Space Mono',monospace;font-size:11px;color:var(--accent)}
+.form-group{margin-bottom:16px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--muted2);margin-bottom:5px;text-transform:uppercase;letter-spacing:0.5px}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--text);outline:none;transition:border-color 0.2s}
+.form-input:focus{border-color:var(--accent)}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn{padding:11px 20px;border-radius:10px;font-size:13px;font-weight:700;border:none;cursor:pointer;transition:opacity 0.2s}
+.btn-primary{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff}
+.btn-primary:hover{opacity:0.85}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text)}
+.msg{padding:10px 14px;border-radius:8px;font-size:13px;margin-bottom:12px;display:none}
+.msg.error{background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.2);color:var(--red)}
+.msg.success{background:rgba(52,211,153,0.1);border:1px solid rgba(52,211,153,0.2);color:var(--green)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="back-btn" href="/dashboard">← Back to Dashboard</a>
+  <div class="logo">⚙️ Profile Settings</div>
+  <a href="/logout"><button class="btn btn-ghost">🚪 Logout</button></a>
+</div>
+<div class="grid">
+  <!-- LEFT: User info -->
+  <div>
+    <div class="card">
+      <div class="avatar-box">
+        <div class="avatar">{{ user.username[0].upper() }}</div>
+        <div class="username">{{ user.username }}</div>
+        <div class="useremail">{{ user.email }}</div>
+      </div>
+      <div class="info-row"><span class="info-key">Phone</span><span class="info-val">{{ user.phone or '—' }}</span></div>
+      <div class="info-row"><span class="info-key">Broker</span><span class="info-val">{{ user.broker or 'Zerodha' }}</span></div>
+      <div class="info-row"><span class="info-key">Theme</span><span class="info-val">{{ user.theme or 'Dark' }}</span></div>
+      <div class="info-row"><span class="info-key">Member Since</span><span class="info-val">{{ user.created_at[:10] if user.created_at else '—' }}</span></div>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="card-title">Watchlist ({{ watchlist|length }})</div>
+      {% if watchlist %}
+      <div class="wl-chips">
+        {% for sym in watchlist %}
+        <div class="wl-chip">{{ sym }}</div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div style="font-size:12px;color:var(--muted)">No stocks in watchlist</div>
+      {% endif %}
+    </div>
+  </div>
+  <!-- RIGHT: Edit form -->
+  <div class="card">
+    <div class="card-title">Edit Profile</div>
+    <div class="msg" id="msg"></div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label class="form-label">Phone Number</label>
+        <input class="form-input" type="tel" id="phone" value="{{ user.phone or '' }}" placeholder="+91 9876543210">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preferred Broker</label>
+        <select class="form-input" id="broker">
+          {% for b in ['Zerodha','Upstox','Angel One','HDFC Securities','Groww','5Paisa','ICICI Direct'] %}
+          <option {% if user.broker == b %}selected{% endif %}>{{ b }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Dashboard Theme</label>
+      <select class="form-input" id="theme">
+        <option value="dark" {% if user.theme == 'dark' or not user.theme %}selected{% endif %}>🌙 Dark Mode</option>
+        <option value="light" {% if user.theme == 'light' %}selected{% endif %}>☀️ Light Mode</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Profile Image</label>
+      <input class="form-input" type="file" id="profile_image" accept="image/*">
+    </div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn btn-primary" onclick="saveProfile()">💾 Save Changes</button>
+      <a href="/dashboard"><button class="btn btn-ghost" type="button">Cancel</button></a>
+    </div>
+  </div>
+</div>
+<script>
+function saveProfile() {
+  const fd = new FormData();
+  fd.append('phone',document.getElementById('phone').value);
+  fd.append('broker',document.getElementById('broker').value);
+  fd.append('theme',document.getElementById('theme').value);
+  const imgFile = document.getElementById('profile_image').files[0];
+  if(imgFile) fd.append('profile_image',imgFile);
+  fetch('/profile',{method:'POST',body:fd}).then(r=>r.json()).then(data=>{
+    const msg=document.getElementById('msg');
+    msg.textContent=data.message||'Saved!'; msg.className='msg '+(data.success?'success':'error'); msg.style.display='block';
+    if(data.success) setTimeout(()=>window.location='/dashboard',1200);
+  });
+}
+</script>
+</body>
+</html>
