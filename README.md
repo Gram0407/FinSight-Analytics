@@ -1,7 +1,7 @@
 # FinSight Analytics — Full-Stack Financial Analytics Platform
 
 **MBA Banking Technology · Pondicherry University**
-*Submitted by: IYYANAR G (24MBAFTPY0049) · Guide: Dr. A. Balakrishnan*
+*Submitted by: IYYANAR G · Guide: Dr. A. Balakrishnan*
 
 ---
 
